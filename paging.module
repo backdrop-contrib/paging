@@ -64,4 +64,3 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 }
 
 ?>
-
