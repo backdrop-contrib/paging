@@ -11,9 +11,9 @@ function paging_help($section) {
                "a \"page\" tag:</p>\n" .
                "<pre>\n" .
                "first page here.\n" .
-               "&lt;!-- page --&gt;\n" .
+               "&lt;!--pagebreak--&gt;\n" .
                "second page here.\n" .
-               "&lt;!-- page --&gt;\n" .
+               "&lt;!--pagebreak--&gt;\n" .
                "more pages here.\n");
     case 'admin/modules#description':
       return t("Allow users to use a tag to break a node up into multiple pages.");
@@ -25,20 +25,20 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 
     case 'load':
       // Set up our pages on load.
-      if (ereg("<!-- page -->", $node->body)) {
-        $node->pages = explode("<!-- page -->", $node->body);
+      if (ereg("<!--pagebreak-->", $node->body)) {
+        $node->pages = explode("<!--pagebreak-->", $node->body);
       }
 
     case 'form pre':
     case 'fields':
       // Replace the "pg" tag with the original "page" when the page
       // is about to be saved or the edit form is displayed.
-      $node-> body = str_replace("<!-- pg -->", "<!-- page -->", $node->body);
+      $node-> body = str_replace("<!-- pg -->", "<!--pagebreak-->", $node->body);
       break;
 
     case 'validate':
        //  Replace the "page" tag not to break page preview.
-      $node-> body = str_replace("<!-- page -->", "<!-- pg -->", $node->body);
+      $node-> body = str_replace("<!--pagebreak-->", "<!-- pg -->", $node->body);
       break;
 
     case 'view':
