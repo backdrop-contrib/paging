@@ -44,7 +44,7 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     case 'view':
       // check paging is really needed and avoid paging 
       // printer friendly pages as well.
-      if (!$teaser && !empty($node->pages) && arg(3) != 'print') {
+      if (!$teaser && !empty($node->pages) && arg(2) != 'print') {
         // This is a cheat to load the pager variables.
         pager_query("SELECT 1", 1, 0, "SELECT " . count($node->pages));
         global $pager_page_array;
