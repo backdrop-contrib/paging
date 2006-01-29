@@ -1,5 +1,5 @@
 <?
-
+// $Id$
 // Original module written by Marco Scutari.
 // Rewritten and considerably shortened and made more Drupal-friendly
 // by Earl Miles.
@@ -28,9 +28,9 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       if (ereg("<!--pagebreak-->", $node->body)) {
         $node->pages = explode("<!--pagebreak-->", $node->body);
       }
+      break;
 
-    case 'form pre':
-    case 'fields':
+    case 'submit':
       // Replace the "pg" tag with the original "page" when the page
       // is about to be saved or the edit form is displayed.
       $node-> body = str_replace("<!-- pg -->", "<!--pagebreak-->", $node->body);
@@ -44,7 +44,7 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     case 'view':
       // check paging is really needed and avoid paging 
       // printer friendly pages as well.
-      if (!$teaser && !empty($node->pages) && arg(2) != 'print') {
+      if (!$teaser && !empty($node->pages) && arg(2) != 'print' && arg(2) != 'full') {
         // This is a cheat to load the pager variables.
         pager_query("SELECT 1", 1, 0, "SELECT " . count($node->pages));
         global $pager_page_array;
