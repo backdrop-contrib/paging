@@ -50,7 +50,7 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         global $pager_page_array;
         $page = isset($pager_page_array[0]) ? $pager_page_array[0] : 0;
 
-        $node->body = check_markup($node->pages[$page], $node->filter, false);
+        $node->body = check_markup($node->pages[$page], $node->format, false);
         $node->body .= theme('pager', NULL, 0);
       }
       else if ($teaser && !empty($node->pages)) {
