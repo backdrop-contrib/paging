@@ -42,21 +42,22 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       break;
 
     case 'view':
+      $element_id = 1; // to try and avoid breaking with comments
       // check paging is really needed and avoid paging 
       // printer friendly pages as well.
       if (!$teaser && !empty($node->pages) && arg(2) != 'print' && arg(2) != 'full') {
         // This is a cheat to load the pager variables.
-        pager_query("SELECT 1", 1, 0, "SELECT " . count($node->pages));
+        pager_query("SELECT 1", 1, $element_id, "SELECT " . count($node->pages));
         global $pager_page_array;
-        $page = isset($pager_page_array[0]) ? $pager_page_array[0] : 0;
+        $page = isset($pager_page_array[$element_id]) ? $pager_page_array[$element_id] : 0;
 
         $node->body = check_markup($node->pages[$page], $node->format, false);
-        $node->body .= theme('pager', NULL, 0);
+        $node->body .= theme('pager', NULL, $element_id);
       }
       else if ($teaser && !empty($node->pages)) {
         // check to see if the teaser is longer than our first page.
-        if (strlen($node->teaser) > strlen($node->pages[0])) {
-          $node->teaser = check_markup($node->pages[0], $node->filter, false);
+        if (strlen($node->teaser) > strlen($node->pages[$element_id])) {
+          $node->teaser = check_markup($node->pages[$element_id], $node->format, false);
           $node->readmore = true;
         }
       }
