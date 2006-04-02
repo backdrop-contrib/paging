@@ -37,7 +37,7 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           global $pager_page_array, $pager_total;
           $page = isset($_GET['page']) ? $_GET['page'] : '';
           $pager_page_array = explode(',', $page);
-          $pager_total[$element] = count($node->pages);
+          $pager_total[$element] = $node->pages_count;
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $node->body = check_markup($node->pages[$page], $node->format, false);
           $node->body .= theme('pager', NULL, 1, $element);
