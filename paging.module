@@ -1,4 +1,4 @@
-<?
+<?php
 // $Id$
 // Original module written by Marco Scutari.
 // Rewritten and considerably shortened and made more Drupal-friendly
@@ -25,42 +25,28 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 
     case 'load':
       // Set up our pages on load.
-      if (ereg("<!--pagebreak-->", $node->body)) {
-        $node->pages = explode("<!--pagebreak-->", $node->body);
-      }
+      $node->pages = explode("<!--pagebreak-->", $node->body);
+      $node->pages_count = count($node->pages);
       break;
-
-    case 'submit':
-      // Replace the "pg" tag with the original "page" when the page
-      // is about to be saved or the edit form is displayed.
-      $node-> body = str_replace("<!-- pg -->", "<!--pagebreak-->", $node->body);
-      break;
-
-    case 'validate':
-       //  Replace the "page" tag not to break page preview.
-      $node-> body = str_replace("<!--pagebreak-->", "<!-- pg -->", $node->body);
-      break;
-
     case 'view':
-      $element_id = 1; // to try and avoid breaking with comments
-      // check paging is really needed and avoid paging 
-      // printer friendly pages as well.
-      if (!$teaser && !empty($node->pages) && arg(2) != 'print' && arg(2) != 'full') {
-        // This is a cheat to load the pager variables.
-        pager_query("SELECT 1", 1, $element_id, "SELECT " . count($node->pages));
-        global $pager_page_array;
-        $page = isset($pager_page_array[$element_id]) ? $pager_page_array[$element_id] : 0;
-
-        $node->body = check_markup($node->pages[$page], $node->format, false);
-        $node->body .= theme('pager', NULL, $element_id);
-      }
-      else if ($teaser && !empty($node->pages)) {
-        // check to see if the teaser is longer than our first page.
-        if (strlen($node->teaser) > strlen($node->pages[$element_id])) {
-          $node->teaser = check_markup($node->pages[$element_id], $node->format, false);
+      if (!$node->in_preview) {
+        $element = 1; // to try and avoid breaking with comments
+        // check paging is really needed and avoid paging
+        // printer friendly pages as well.
+        if (!$teaser && $node->pages_count > 1 && arg(2) != 'print' && arg(2) != 'full') {
+          global $pager_page_array, $pager_total;
+          $page = isset($_GET['page']) ? $_GET['page'] : '';
+          $pager_page_array = explode(',', $page);
+          $pager_total[$element] = count($node->pages);
+          $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
+          $node->body = check_markup($node->pages[$page], $node->format, false);
+          $node->body .= theme('pager', NULL, 1, $element);
+        }
+        elseif ($teaser && $node->pages_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
+          // check to see if the teaser is longer than our first page.
+          $node->teaser = check_markup($node->pages[0], $node->format, false);
           $node->readmore = true;
         }
       }
   }
 }
-
