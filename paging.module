@@ -45,7 +45,7 @@ function paging_settings() {
   $form['paging_config']['paging_read_more_enabled'] = array(
     '#type' => 'checkboxe',
     '#title' => t('Link read more to next page'),
-	'#description' => t('If enabled, "read more" link under teasers will link to the next content page. Note: Only works if teaser and first page have the same content. Usage not recommended, unless you are willing to customize it with your theme.');
+	'#description' => t('If enabled, "read more" link under teasers will link to the next content page. Note: Only works if teaser and first page have the same content. Usage not recommended, unless you are willing to customize it with your theme.'),
     '#default_value' => variable_get('paging_read_more_enabled', 0)
   );
   $form['paging_config']['paging_node_types_enabled'] = array(
