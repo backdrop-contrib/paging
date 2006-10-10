@@ -4,6 +4,9 @@
 // Rewritten and considerably shortened and made more Drupal-friendly
 // by Earl Miles.
 
+define('PAGING_SEPARATOR', variable_get('paging_separator', '<!--pagebreak-->'));
+define('PAGING_SEPARATOR_PRINT', str_replace(array('<', '>'), array('&lt;', '&gt;'), PAGING_SEPARATOR));
+
 function paging_help($section) {
   switch ($section) {
     case 'admin/help#paging':
@@ -11,25 +14,82 @@ function paging_help($section) {
                "a \"page\" tag:</p>\n" .
                "<pre>\n" .
                "first page here.\n" .
-               "&lt;!--pagebreak--&gt;\n" .
+               "%separator\n" .
                "second page here.\n" .
-               "&lt;!--pagebreak--&gt;\n" .
-               "more pages here.\n");
+               "%separator\n" .
+               "more pages here.\n", array('%separator' => PAGING_SEPARATOR_PRINT));
     case 'admin/modules#description':
-      return t("Allow users to use a tag to break a node up into multiple pages.");
+      return t("Allow users to use a tag to break a node up, for specified content types, into multiple pages.");
   }
 }
 
-function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  switch ($op) {
+/*
+ * Implementation of hook_settings()
+ */
+function paging_settings() {
+  $form = array();
 
+  $form['paging_config'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Node types'),
+    '#description' => t('Set the node types you want to enable Paging for.'),
+  );
+  $form['paging_config']['paging_separator'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Separator'),
+    '#size' => 20,
+    '#maxlength' => 255,
+    '#default_value' => PAGING_SEPARATOR,
+    '#description' => t('Paging separator string.  You should use an HTML tag that will render reasonably when paging is not enabled such as &lt;!--pagebreak--&gt; or &lt;HR /&gt;'),
+  );
+  $form['paging_config']['paging_read_more_enabled'] = array(
+    '#type' => 'checkboxe',
+    '#title' => t('Link read more to next page'),
+	'#description' => t('If enabled, "read more" link under teasers will link to the next content page. Note: Only works if teaser and first page have the same content. Usage not recommended, unless you are willing to customize it with your theme.');
+    '#default_value' => variable_get('paging_read_more_enabled', 0)
+  );
+  $form['paging_config']['paging_node_types_enabled'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Types'),
+    '#default_value' => variable_get('paging_node_types_enabled', array()),
+    '#options' => node_get_types(),
+  );
+
+  return $form;
+}
+
+/*
+ * Implementation of hook_nodeapi()
+ */
+function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
+  if (isset($node->field_body[0]['view'])) { // support for CCK
+    _paging_nodeapi($node,
+                    $node->field_body[0]['view'],
+                    $node->field_teaser[0]['view'],
+                    $op, $teaser, $page);
+  } elseif (isset($node->field_body[0]['value'])) { // support for CCK
+    _paging_nodeapi($node,
+                    $node->field_body[0]['value'],
+                    $node->field_teaser[0]['value'],
+                    $op, $teaser, $page);
+  } else {
+    _paging_nodeapi($node, $node->body, $node->teaser, $op, $teaser, $page);
+  }
+}
+
+/*
+ * Helper function for paging_nodeapi()
+ */
+function _paging_nodeapi(&$node, &$nodebody, &$nodeteaser, $op, $teaser, $page) {
+  switch ($op) {
     case 'load':
-      // Set up our pages on load.
-      $node->pages = explode("<!--pagebreak-->", $node->body);
+      $node->pages = explode(PAGING_SEPARATOR, $nodebody);
       $node->pages_count = count($node->pages);
       break;
+
     case 'view':
-      if (!$node->in_preview) {
+	  $node_type = in_array($node->type, variable_get('paging_node_types_enabled', array()), TRUE);
+      if (!$node->in_preview && $node_type && ereg('<!--paging_filter-->', $teaser ? $nodeteaser : $nodebody)) {
         $element = 1; // to try and avoid breaking with comments
         // check paging is really needed and avoid paging
         // printer friendly pages as well.
@@ -39,14 +99,68 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           $pager_page_array = explode(',', $page);
           $pager_total[$element] = $node->pages_count;
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
-          $node->body = check_markup($node->pages[$page], $node->format, false);
-          $node->body .= theme('pager', NULL, 1, $element);
+          $nodebody = check_markup($node->pages[$page], $node->format, false);
+          $nodebody .= theme('pager', NULL, 1, $element);
         }
         elseif ($teaser && $node->pages_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
           // check to see if the teaser is longer than our first page.
           $node->teaser = check_markup($node->pages[0], $node->format, false);
-          $node->readmore = true;
+          $node->pagemore = true;
+          // $node->paging_filter = true; // whats this for?
         }
       }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_link().
+ */
+function paging_link($type, $node = 0, $main = 0) {
+  $links = array();
+
+  if ($type == 'node') {
+    if (array_key_exists('links', $node)) {
+      $links = $node->links;
+    }
+
+    if ($main == 1 && $node->teaser && $node->pagemore && variable_get('paging_read_more_enabled', 0)) {
+	  theme_add_style(drupal_get_path('module', 'paging') . '/paging.css');
+      $links[] = l(t('read more'), "node/$node->nid", array('title' => t('Read the rest of this posting.'), 'class' => 'read-more-paging'), 'page=0,1');
+    }
+  }
+
+  return $links;
+}
+
+/**
+ * Implementation of hook_filter().
+ */
+function paging_filter($in_op, $in_delta = 0, $in_format = -1, $in_text = '') {
+  switch ($in_op) {
+    case 'list':
+      return array(t("Paging"));
+    case 'description':
+      return t('Allows content to be broken up into pages, using the %separator tag, configurable ' . l('here', 'admin/settings/paging') . '.', array('%separator' => PAGING_SEPARATOR_PRINT));
+
+    // the filter gets called before the nodeapi 'view' so,
+    // add a comment to the body to inform the nodapi to apply the filter
+    case 'process':
+      return '<!--paging_filter-->' . $in_text;
+
+    default:
+      return $in_text;
+  }
+}
+
+/**
+ * Implementation of hook_filter_tips().
+ */
+function paging_filter_tips($in_delta, $in_format, $in_is_long = FALSE) {
+  if ($in_is_long) {
+    return t('<h1>Paging Help</h1>') .  paging_help('admin/help#paging');
+  }
+  else {
+    return t('Use %separator to create page breaks.', array('%separator' => PAGING_SEPARATOR_PRINT));
   }
 }
