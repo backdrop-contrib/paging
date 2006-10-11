@@ -31,8 +31,7 @@ function paging_settings() {
 
   $form['paging_config'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Node types'),
-    '#description' => t('Set the node types you want to enable Paging for.'),
+    '#title' => t('Paging settings'),
   );
   $form['paging_config']['paging_separator'] = array(
     '#type' => 'textfield',
@@ -50,7 +49,8 @@ function paging_settings() {
   );
   $form['paging_config']['paging_node_types_enabled'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Types'),
+    '#title' => t('Node Types'),
+    '#description' => t('Set the node types you want to enable Paging for.'),
     '#default_value' => variable_get('paging_node_types_enabled', array()),
     '#options' => node_get_types(),
   );
