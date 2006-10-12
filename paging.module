@@ -101,6 +101,9 @@ function _paging_nodeapi(&$node, &$nodebody, &$nodeteaser, $op, $teaser, $page) 
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $nodebody = check_markup($node->pages[$page], $node->format, false);
           $nodebody .= theme('pager', NULL, 1, $element);
+		  if (module_exist('book') && $node->type=='book') {
+		  $node->body .= theme('book_navigation', $node); // temporary fix for book nav links
+		  }
         }
         elseif ($teaser && $node->pages_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
           // check to see if the teaser is longer than our first page.
