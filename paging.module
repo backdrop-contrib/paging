@@ -3,113 +3,217 @@
 // Original module written by Marco Scutari.
 // Rewritten and considerably shortened and made more Drupal-friendly
 // by Earl Miles.
+// Yet again rewritten, extended and maintained by Gurpartap Singh.
 
-define('PAGING_SEPARATOR', variable_get('paging_separator', '<!--pagebreak-->'));
-define('PAGING_SEPARATOR_PRINT', str_replace(array('<', '>'), array('&lt;', '&gt;'), PAGING_SEPARATOR));
-
-function paging_help($section) {
-  switch ($section) {
+/**
+ * Implementation of hook_help().
+ */
+function paging_help($path, $arg) {
+  switch ($path) {
     case 'admin/help#paging':
-      return t("<p>Break long pages into smaller ones by means of " .
-               "a \"page\" tag:</p>\n" .
-               "<pre>\n" .
-               "first page here.\n" .
-               "%separator\n" .
-               "second page here.\n" .
-               "%separator\n" .
-               "more pages here.\n", array('%separator' => PAGING_SEPARATOR_PRINT));
-    case 'admin/modules#description':
-      return t("Allow users to use a tag to break a node up, for specified content types, into multiple pages.");
+      return '<p>' . t('Break long pages into smaller ones by means of a page tag (e.g. %separator):</p>
+<pre>First page here.
+%separator
+Second page here.
+%separator
+More pages here.', array('%separator' => '<!--pagebreak-->')) . '</p>';
+      break;
   }
 }
 
-/*
- * Implementation of hook_settings()
+/**
+ * Menu callback; display module settings form.
  */
-function paging_settings() {
-  $form = array();
-
+function paging_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'node_type_form' && isset($form['identity']['type'])) {
   $form['paging_config'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Paging settings'),
+    '#title' => t('Paging'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['paging_config']['paging_enabled'] = array(
+    '#type' => 'radios',
+    '#title' => t('Paging'),
+    '#default_value' => variable_get('paging_enabled_' . $form['#node_type']->type, 0),
+    '#options' => array(t('Disabled'), t('Enabled')),
   );
   $form['paging_config']['paging_separator'] = array(
     '#type' => 'textfield',
     '#title' => t('Separator'),
     '#size' => 20,
     '#maxlength' => 255,
-    '#default_value' => PAGING_SEPARATOR,
-    '#description' => t('Paging separator string.  You should use an HTML tag that will render reasonably when paging is not enabled such as &lt;!--pagebreak--&gt; or &lt;HR /&gt;'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('paging_separator_' . $form['#node_type']->type, '<!--pagebreak-->'),
+    '#description' => t('Page separator string. You should use an HTML tag that will render reasonably when paging is not enabled, such as %pagebreak or %hr.', array('%pagebreak' => '<!--pagebreak-->', '%hr' => '<hr />')),
   );
   $form['paging_config']['paging_read_more_enabled'] = array(
-    '#type' => 'checkboxe',
-    '#title' => t('Link read more to next page'),
-	'#description' => t('If enabled, "read more" link under teasers will link to the next content page. Note: Only works if teaser and first page have the same content. Usage not recommended, unless you are willing to customize it with your theme.'),
-    '#default_value' => variable_get('paging_read_more_enabled', 0)
-  );
-  $form['paging_config']['paging_node_types_enabled'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Node Types'),
-    '#description' => t('Set the node types you want to enable Paging for.'),
-    '#default_value' => variable_get('paging_node_types_enabled', array()),
-    '#options' => node_get_types(),
+    '#type' => 'checkbox',
+    '#title' => t('Link "Read more" to the second page'),
+    '#description' => t('If enabled, the "Read more" link under teasers will link to the 2nd page of the node. Implemented only when the teaser and the first page content is same.'),
+    '#default_value' => variable_get('paging_read_more_enabled_' . $form['#node_type']->type, 0),
   );
 
-  return $form;
-}
+  $form['paging_config']['paging_automatic'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Automatic Paging'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('Automatic paging is disabled when both methods below are disabled, or when the node already contains the page break separator. Automatic paging by line break is preferred over the method of automatic paging by words.'),
+  );
 
-/*
- * Implementation of hook_nodeapi()
- */
-function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  if (isset($node->field_body[0]['view'])) { // support for CCK
-    _paging_nodeapi($node,
-                    $node->field_body[0]['view'],
-                    $node->field_teaser[0]['view'],
-                    $op, $teaser, $page);
-  } elseif (isset($node->field_body[0]['value'])) { // support for CCK
-    _paging_nodeapi($node,
-                    $node->field_body[0]['value'],
-                    $node->field_teaser[0]['value'],
-                    $op, $teaser, $page);
-  } else {
-    _paging_nodeapi($node, $node->body, $node->teaser, $op, $teaser, $page);
+  $form['paging_config']['paging_automatic']['paging_paragraph'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('By line break'),
+    '#collapsed' => FALSE,
+    '#prefix' => '<div class="container-inline">',
+  );
+  $form['paging_config']['paging_automatic']['paging_paragraph']['paging_automatic_chars'] = array(
+    '#type' => 'select',
+    '#title' => t('Length of each page'),
+    '#options' => array(0 => t('Disabled'),
+      500 => t('500 characters'), 750 => t('750 characters'),
+      1000 => t('1000 characters'), 1500 => t('1500 characters'),
+      2000 => t('2000 characters'), 2500 => t('2500 characters'),
+      3000 => t('3000 characters'), 3500 => t('3500 characters'),
+      4000 => t('4000 characters'), 4500 => t('4500 characters'),
+      5000 => t('5000 characters'), 5500 => t('5500 characters'),
+      6000 => t('6000 characters'), 6500 => t('6500 characters'),
+      7000 => t('7000 characters'), 7500 => t('7500 characters'),
+    ),
+    '#required' => TRUE,
+    '#description' => '<br />' . t('Set the number of characters that should be displayed per page. <strong>This is the recommended method</strong> for automatic paging.'),
+    '#default_value' => variable_get('paging_automatic_chars_' . $form['#node_type']->type, 0),
+  );
+
+  $form['paging_config']['paging_automatic']['paging_words'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('By words'),
+    '#collapsed' => FALSE,
+  );
+  $form['paging_config']['paging_automatic']['paging_words']['paging_automatic_words'] = array(
+    '#type' => 'select',
+    '#title' => t('Length of each page'),
+    '#options' => array(0 => t('Disabled'),
+      50 => t('100 words'), 150 => t('150 words'),
+      200 => t('200 words'), 250 => t('250 words'),
+      300 => t('300 words'), 350 => t('350 words'),
+      400 => t('400 words'), 450 => t('450 words'),
+      500 => t('500 words'), 550 => t('550 words'),
+      600 => t('600 words'), 650 => t('650 words'),
+      700 => t('700 words'), 750 => t('750 words'),
+    ),
+    '#required' => TRUE,
+    '#description' => '<br />' . t('Set the number of words that should be displayed per page. This may break your sentences at page breaks.'),
+    '#default_value' => variable_get('paging_automatic_words_' . $form['#node_type']->type, 0),
+    '#suffix' => '</div>',
+  );
   }
 }
 
-/*
- * Helper function for paging_nodeapi()
+/**
+ * Implementation of hook_nodeapi().
+ */
+function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
+  if (variable_get('paging_enabled_' . $node->type, 0)) {
+    switch ($op) {
+      case 'load':
+      case 'view':
+      case 'alter':
+        if (isset($node->field_body[0]['view'])) { // support for CCK
+          _paging_nodeapi($node,
+                          $node->field_body[0]['view'],
+                          $node->field_teaser[0]['view'],
+                          $op, $teaser, $page);
+        }
+        elseif (isset($node->field_body[0]['value'])) { // support for CCK
+          _paging_nodeapi($node,
+                          $node->field_body[0]['value'],
+                          $node->field_teaser[0]['value'],
+                          $op, $teaser, $page);
+        }
+        else {
+          _paging_nodeapi($node, $node->body, $node->teaser, $op, $teaser, $page);
+        }
+        break;
+      case 'prepare':
+        // Pass the paging separator string for input format filter tips.
+        $GLOBALS['paging_sep'] = variable_get('paging_separator_' . $node->type, '<!--pagebreak-->');
+        break;
+    }
+  }
+}
+
+/**
+ * Helper function for paging_nodeapi().
  */
 function _paging_nodeapi(&$node, &$nodebody, &$nodeteaser, $op, $teaser, $page) {
   switch ($op) {
     case 'load':
-      $node->pages = explode(PAGING_SEPARATOR, $nodebody);
-      $node->pages_count = count($node->pages);
-      break;
-
-    case 'view':
-	  $node_type = in_array($node->type, variable_get('paging_node_types_enabled', array()), TRUE);
-      if (!$node->in_preview && $node_type && ereg('<!--paging_filter-->', $teaser ? $nodeteaser : $nodebody)) {
-        $element = 1; // to try and avoid breaking with comments
-        // check paging is really needed and avoid paging
-        // printer friendly pages as well.
-        if (!$teaser && $node->pages_count > 1 && arg(2) != 'print' && arg(2) != 'full') {
-          global $pager_page_array, $pager_total;
-          $page = isset($_GET['page']) ? $_GET['page'] : '';
-          $pager_page_array = explode(',', $page);
-          $pager_total[$element] = $node->pages_count;
-          $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
-          $nodebody = check_markup($node->pages[$page], $node->format, false);
-          $nodebody .= theme('pager', NULL, 1, $element);
-		  if (module_exist('book') && $node->type=='book') {
-		  $node->body .= theme('book_navigation', $node); // temporary fix for book nav links
-		  }
+      $paging_separator = variable_get('paging_separator_' . $node->type, '<!--pagebreak-->');
+      if (strpos($teaser ? $nodeteaser : $nodebody, $paging_separator) !== FALSE) {
+        $node->pages = explode($paging_separator, $nodebody);
+        $node->page_count = count($node->pages);
+      }
+      else {
+        $body_parts = $nodebody;
+        if (($max_chars = variable_get('paging_automatic_chars_' . $node->type, 0)) != 0) {
+          $total_chars = strlen($nodebody);
+          if ($total_chars > $max_chars) {
+            $body = $nodebody;
+            $breaks = (int)($total_chars / $max_chars);
+            $bodypart = array();
+            for ($i = 0; $i <= $breaks; $i++) {
+              $bodypart[$i] = node_teaser(trim($body), NULL, $max_chars);
+              $bodycount = strlen($bodypart[$i]);
+              $body = substr($body, $bodycount);
+            }
+            $body_parts = implode($paging_separator, $bodypart);
+          }
         }
-        elseif ($teaser && $node->pages_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
-          // check to see if the teaser is longer than our first page.
-          $node->teaser = check_markup($node->pages[0], $node->format, false);
+        elseif (($max_words = variable_get('paging_automatic_words_' . $node->type, 0)) != 0) {
+          $words = explode(' ', $nodebody);
+          $total_words = count($words);
+          if ($total_words > $max_words) {
+            $breaks = (int)($total_words / $max_words);
+            for ($i = 1; $i < $breaks; $i++) {
+              $index = $i * $max_words;
+              $words[$index] .= $paging_separator;
+            }
+          }
+          $body_parts = implode(' ', $words);
+        }
+        $node->pages = explode($paging_separator, $body_parts);
+        $node->page_count = count($node->pages);
+      }
+      break;
+    case 'view':
+      if ($teaser && !$node->in_preview && strpos($nodeteaser, '<!--paging_filter-->') !== FALSE) {
+        // Check to see if the teaser is longer than our first page.
+        if ($node->page_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
+          $node->content['body']['#value'] = check_markup($node->pages[0], $node->format, false);
           $node->pagemore = true;
-          // $node->paging_filter = true; // whats this for?
+        }
+      }
+      break;
+    case 'alter':
+      if (!$node->in_preview && strpos($teaser ? $nodeteaser : $nodebody, '<!--paging_filter-->') !== FALSE) {
+        $element = 1;
+        $page = isset($_GET['page']) ? $_GET['page'] : '';
+        if (!$teaser && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
+          global $pager_page_array, $pager_total;
+          $pager_page_array = explode(',', $page);
+          $pager_total[$element] = $node->page_count;
+          $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
+          $node->body = check_markup($node->pages[$page], $node->format, false);
+          // Decode the comma. Ugly.
+          $node->body .= '<div class="links">' . str_replace('%2C', ',', theme('pager', NULL, 1, $element)) . '</div>';
+          // Remove internal <!--paging_filter--> tag from final output.
+          $node->body = str_replace('<!--paging_filter-->', '', $node->body);
+        }
+        else if ($teaser) {
+          // Remove internal <!--paging_filter--> tag from final output.
+          $nodeteaser = str_replace('<!--paging_filter-->', '', $nodeteaser);
         }
       }
       break;
@@ -127,13 +231,26 @@ function paging_link($type, $node = 0, $main = 0) {
       $links = $node->links;
     }
 
-    if ($main == 1 && $node->teaser && $node->pagemore && variable_get('paging_read_more_enabled', 0)) {
-	  theme_add_style(drupal_get_path('module', 'paging') . '/paging.css');
-      $links[] = l(t('read more'), "node/$node->nid", array('title' => t('Read the rest of this posting.'), 'class' => 'read-more-paging'), 'page=0,1');
+    if ($main == 1 && $node->teaser && $node->pagemore && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
+      $links['paging_read_more'] = array(
+        'title' => t('Read more'),
+        'href' => drupal_get_path_alias("node/$node->nid"),
+        'attributes' => array('title' => t('Read the rest of this posting.'), 'class' => 'read-more-paging'),
+        'query' => 'page=0,1'
+      );
     }
   }
 
   return $links;
+}
+
+/**
+ * Implementation of hook_link_alter().
+ */
+function paging_link_alter(&$links, $node) {
+  if ($node->teaser && $node->pagemore && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
+    unset($links['node_read_more']);
+  }
 }
 
 /**
@@ -142,17 +259,19 @@ function paging_link($type, $node = 0, $main = 0) {
 function paging_filter($in_op, $in_delta = 0, $in_format = -1, $in_text = '') {
   switch ($in_op) {
     case 'list':
-      return array(t("Paging"));
+      return array(t('Paging'));
+      break;
     case 'description':
-      return t('Allows content to be broken up into pages, using the %separator tag, configurable ' . l('here', 'admin/settings/paging') . '.', array('%separator' => PAGING_SEPARATOR_PRINT));
-
-    // the filter gets called before the nodeapi 'view' so,
-    // add a comment to the body to inform the nodapi to apply the filter
+      return t('Allows content to be broken up into pages, using a separator tag (e.g. %separator), configurable <a href="!url">here</a>.', array('%separator' => '<!--pagebreak-->', '!url' => url('admin/settings/paging')));
+      break;
     case 'process':
+      // the filter gets called before the nodeapi 'view' so,
+      // add a comment to the body to inform the nodapi to apply the filter
       return '<!--paging_filter-->' . $in_text;
-
+      break;
     default:
       return $in_text;
+      break;
   }
 }
 
@@ -161,9 +280,13 @@ function paging_filter($in_op, $in_delta = 0, $in_format = -1, $in_text = '') {
  */
 function paging_filter_tips($in_delta, $in_format, $in_is_long = FALSE) {
   if ($in_is_long) {
-    return t('<h1>Paging Help</h1>') .  paging_help('admin/help#paging');
+    return '<h1>' . t('Paging Help') . '</h1>' . paging_help('admin/help#paging');
   }
   else {
-    return t('Use %separator to create page breaks.', array('%separator' => PAGING_SEPARATOR_PRINT));
+    return t('Use %separator to create page breaks.', array('%separator' => $GLOBALS['paging_sep']));
   }
+}
+
+function d($msg) {
+  drupal_set_message('<pre>' . print_r($msg, TRUE) . '</pre>');
 }
