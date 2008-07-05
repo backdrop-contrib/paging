@@ -1,0 +1,5 @@
+; $Id$
+name = Paging
+description = "Allows users to use a tag to break a node up, for specified content types, into multiple pages."
+package = Paging
+core = 6.x

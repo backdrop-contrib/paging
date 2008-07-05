@@ -1,0 +1,40 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function paging_uninstall() {
+  variable_del('paging_separator');
+  variable_del('paging_read_more_enabled');
+  variable_del('paging_node_types_enabled');
+  variable_del('paging_automatic_chars');
+  variable_del('paging_automatic_words');
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function paging_update_1() {
+  $ret = array();
+  module_invoke('node', 'search', 'reset');
+  module_invoke('node', 'update_index');
+  node_update_shutdown();
+  $status = module_invoke('node', 'search', 'status');
+  $percentage = ((int)min(100, 100 * ($status['total'] - $status['remaining']) / max(1, $status['total']))) . '%';
+  $ret[] = array('success' => TRUE, 'query' => t('!percentage of the site has been indexed.', array('!percentage' => $percentage)));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function paging_update_2() {
+  if (db_result(db_query("
+    SELECT 1 FROM {system}
+    WHERE type = 'module' AND name = 'paging_gsitemap' AND (status = 1 OR schema_version >= 0)
+  "))) {
+    drupal_install_modules(array('paging_xmlsitemap'));
+  }
+  return array();
+}
