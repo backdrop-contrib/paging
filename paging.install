@@ -5,11 +5,7 @@
  * Implementation of hook_uninstall().
  */
 function paging_uninstall() {
-  variable_del('paging_separator');
-  variable_del('paging_read_more_enabled');
-  variable_del('paging_node_types_enabled');
-  variable_del('paging_automatic_chars');
-  variable_del('paging_automatic_words');
+  db_query("DELETE FROM {variable} WHERE name LIKE 'paging%'");
 }
 
 /**
