@@ -26,6 +26,15 @@ More pages here.</pre>', array('%separator' => '<!--pagebreak-->')) . '<p>' . t(
 }
 
 /**
+ * Implementation of hook_theme().
+ */
+function paging_theme() {
+  return array(
+    'paging_drop_down' => array('tags' => NULL, 'limit' => NULL, 'element' => NULL, 'parameters' => NULL, 'quantity' => NULL),
+  );
+}
+
+/**
  * Implementation of hook_menu().
  */
 function paging_menu() {
@@ -96,20 +105,7 @@ function paging_settings() {
       '#default_value' => variable_get('paging_separator_' . $type, '<!--pagebreak-->'),
       '#description' => t('Use an HTML tag that will render reasonably when paging is not enabled, such as %pagebreak or %hr.', array('%pagebreak' => '<!--pagebreak-->', '%hr' => '<hr />')),
     );
-    $form[$type]['paging_config']['paging_left']['paging_read_more_enabled_' . $type] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Link "Read more" to second page'),
-      '#description' => t('When enabled, the "Read more" link under teasers will link to the second page of the content, iff the teaser is larger than the first page or if they are the same.'),
-      '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
-    );
-
-    $form[$type]['paging_config']['paging_right'] = array(
-      '#type' => 'fieldset',
-      '#collapsible' => FALSE,
-      '#collapsed' => FALSE,
-      '#attributes' => array('class' => 'paging-right'),
-    );
-    $form[$type]['paging_config']['paging_right']['paging_separator_widget_' . $type] = array(
+    $form[$type]['paging_config']['paging_left']['paging_separator_widget_' . $type] = array(
       '#type' => 'radios',
       '#title' => t('Paging separator widget'),
       '#options' => array(t('Disabled'), t('Image'), t('Button'),
@@ -118,6 +114,54 @@ function paging_settings() {
       '#description' => t('Choose the style of separator string widget. This widget attaches itself to the body textarea and when clicked, inserts separator at cursor position.'),
       '#default_value' => variable_get('paging_separator_widget_' . $type, 0),
       '#attributes' => array('class' => 'paging-method'),
+    );
+    $form[$type]['paging_config']['paging_left']['paging_pager_widget_' . $type] = array(
+      '#type' => 'radios',
+      '#title' => t('Pager style'),
+      '#options' => array(
+        'pager' => t('Default <small>- <code>!pager</code></small>', array(
+          '!pager' => l('theme_pager()', 'http://api.drupal.org/api/function/theme_pager/6', array('attributes' => array('target' => '_blank'))),
+        )),
+	      'paging_drop_down' => t('Drop down list'),
+        'custom' => t('Custom'),
+      ),
+      '#required' => TRUE,
+      '#description' => t('Choose the style of appearance for the page navigation links.'),
+      '#default_value' => variable_get('paging_pager_widget_' . $type, 'pager'),
+      '#attributes' => array('class' => 'paging-pager'),
+    );
+    $form[$type]['paging_config']['paging_left']['paging_pager_widget_custom_' . $type] = array(
+      '#type' => 'textfield',
+      '#title' => t('Custom pager theme function'),
+      '#size' => 20,
+      '#maxlength' => 255,
+      '#required' => TRUE,
+      '#default_value' => variable_get('paging_pager_widget_custom_' . $type, 'pager'),
+      '#description' => t('Enter the part after the prefix <em>theme_</em> of your custom theme function.'),
+      '#attributes' => array('class' => 'paging-pager-custom-' . $type),
+      '#field_prefix' => 'theme_',
+    );
+
+    $form[$type]['paging_config']['paging_right'] = array(
+      '#type' => 'fieldset',
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#attributes' => array('class' => 'paging-right'),
+    );
+    $form[$type]['paging_config']['paging_right']['paging_read_more_enabled_' . $type] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Link "Read more" to second page'),
+      '#description' => t('When enabled, the "Read more" link under teasers will link to the second page of the content, iff the teaser is larger than the first page or if they are the same.'),
+      '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
+    );
+    $form[$type]['paging_config']['paging_right']['paging_names_enabled_' . $type] = array(
+      '#type' => 'radios',
+      '#title' => t('Page names interface'),
+      '#options' => array(t('Disabled'), t('Enabled')),
+      '#required' => TRUE,
+      '#description' => t('Add an interface to manage page names, which otherwise is a text format within content body, like <em>&lt;!--pagenames:First page||Page no. 2||Chapter 3--&gt;</em>.'),
+      '#default_value' => variable_get('paging_names_enabled_' . $type, 0),
+      '#attributes' => array('class' => 'paging-names'),
     );
     $form[$type]['paging_config']['paging_right']['paging_automatic_method_' . $type] = array(
       '#type' => 'radios',
@@ -173,7 +217,7 @@ function paging_settings() {
     '#value' => '<div id="paging-vertical-tabs"><ul class="ui-tabs-nav"></ul></div>',
   );
 
-  // Vertical tabs:
+  // Vertical tabs for node types. Degrades in absence of JS.
   $module_path = drupal_get_path('module', 'paging');
   drupal_add_js($module_path . '/admin/jquery.cookie.min.js', 'module');
   drupal_add_js($module_path . '/admin/ui.tabs.min.js', 'module');
@@ -187,13 +231,27 @@ function paging_settings() {
  * Implementation of hook_form_alter().
  */
 function paging_form_alter(&$form, $form_state, $form_id) {
+  // If paging is enabled for the node type.
   if (isset($form['type']) && isset($form['#node']) && variable_get('paging_enabled_' . $form['#node']->type, 0)) {
     $widget = variable_get('paging_separator_widget_' . $form['#node']->type, 0);
     $separator = variable_get('paging_separator_' . $form['#node']->type, '<!--pagesbreak-->');
     $module_path = drupal_get_path('module', 'paging');
-    drupal_add_js(array('paging' => array('separator' => $separator, 'widget' => $widget, 'module_path' => $module_path)), 'setting');
+
+	  // Expose configuration variables.
+    drupal_add_js(array(
+      'paging' => array(
+        'separator' => $separator,
+        'widget' => $widget,
+        'module_path' => $module_path),
+    ), 'setting');
+
+    // Add JS for button and names handling.
     drupal_add_js($module_path . '/paging.js', 'module');
-    drupal_add_css($module_path . '/paging.css', 'module');
+
+    // Add CSS to adjust button location.
+    if ($widget) {
+      drupal_add_css($module_path . '/paging.css', 'module');
+	  }
   }
 }
 
@@ -287,6 +345,9 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
         $page_names[$key] = $value;
         d($matches);
       }  */
+      preg_match('<!--pagenames:(.*?)-->', $node->pages[0], $matches);
+      $node->page_names = explode('||', $matches[1]);
+
       if ($teaser && !($node->build_mode == NODE_BUILD_PREVIEW) && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
         // Check to see if the teaser is longer than our first page.
         if ($node->page_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
@@ -299,8 +360,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       if (!($node->build_mode == NODE_BUILD_PREVIEW) && strpos($teaser ? $node_teaser : $node_body, '<!--paging_filter-->') !== FALSE) {
         $element = 1;
         $page = isset($_GET['page']) ? $_GET['page'] : '';
-        preg_match('<!--pagenames:(.*?)-->', $node->content['body']['#value'], $matches);
-        $pages = explode('|', $matches[1]);
+
         // Only do paging
         // a) if not in teaser mode;
         // b) if there is more than one page;
@@ -313,8 +373,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $pager_total[$element] = $node->page_count;
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $node->body = check_markup($node->pages[$page], $node->format, false);
-          // Decode the comma. Ugly.
-          $node->body .= '<div class="links">' . str_replace('%2C', ',', theme('pager', NULL, 1, $element)) . '</div>';
+          $node->body .= paging_pager_style($element, $node->type, array('names' => $node->page_names));
           // Remove internal <!--paging_filter--> tag from final output.
           $node->body = str_replace(array('<!--paging_filter-->', '<' . $matches[0] . '>', '&3t;' . $matches[0] . '>'), '', $node->body);
         }
@@ -325,6 +384,30 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       }
       break;
   }
+}
+
+function paging_pager_style($element = NULL, $node_type = NULL, $parameters = NULL) {
+  static $output;
+  if ($output) {
+    //return $output;
+  }
+  $theme_widget = variable_get('paging_pager_widget_' . $node_type, 'pager');
+  if ($theme_widget == 'custom') {
+    $theme_widget = variable_get('paging_pager_widget_custom_' . $node_type, 'pager');
+  }
+  
+  if ($theme_widget == 'paging_drop_down') {
+    // Include CSS for 'Drop down pager' styling.
+    drupal_add_css(drupal_get_path('module', 'paging') . '/paging.css', 'module');
+  }
+  
+  // Decode the comma. Ugly.
+  $output = '<div class="links">' . str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters)) . '</div>';
+  return $output;
+}
+
+function paging_preprocess_node(&$vars) {
+ // $vars['paging'] = paging_pager_style();
 }
 
 /**
@@ -383,5 +466,118 @@ function paging_filter_tips($delta, $format, $long = FALSE) {
   }
   else {
     return t('Use %separator to create page breaks.', array('%separator' => $GLOBALS['paging_sep']));
+  }
+}
+
+/**
+ * Format a query pager.
+ *
+ * Menu callbacks that display paged query results should call theme('pager') to
+ * retrieve a pager control so that users can view other results.
+ * Format a list of nearby pages with additional query results.
+ *
+ * @param $tags
+ *   An array of labels for the controls in the pager.
+ * @param $limit
+ *   The number of query results to display per page.
+ * @param $element
+ *   An optional integer to distinguish between multiple pagers on one page.
+ * @param $parameters
+ *   An associative array of query string parameters to append to the pager links.
+ * @param $quantity
+ *   The number of pages in the list.
+ * @return
+ *   An HTML string that generates the query pager.
+ *
+ * @ingroup themeable
+ */
+function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $parameters = array(), $quantity = 9) {
+  global $pager_page_array, $pager_total;
+
+  $output = '';
+
+  // Calculate various markers within this pager piece:
+  // Middle is used to "center" pages around the current page.
+  $pager_middle = ceil($quantity / 2);
+  // current is the page we are currently paged to
+  $pager_current = $pager_page_array[$element] + 1;
+  // first is the first page listed by this pager piece (re quantity)
+  $pager_first = $pager_current - $pager_middle + 1;
+  // last is the last page listed by this pager piece (re quantity)
+  $pager_last = $pager_current + $quantity - $pager_middle;
+  // max is the maximum page number
+  $pager_max = $pager_total[$element];
+  // End of marker calculations.
+
+  // Prepare for generation loop.
+  $i = $pager_first;
+  if ($pager_last > $pager_max) {
+    // Adjust "center" if at end of query.
+    $i = $i + ($pager_max - $pager_last);
+    $pager_last = $pager_max;
+  }
+  if ($i <= 0) {
+    // Adjust "center" if at start of query.
+    $pager_last = $pager_last + (1 - $i);
+    $i = 1;
+  }
+  // End of generation loop preparation.
+
+  $li_first = theme('pager_first', (isset($tags[0]) ? $tags[0] : t('« first')), $limit, $element);
+  $li_previous = theme('pager_previous', (isset($tags[1]) ? $tags[1] : t('‹ previous')), $limit, $element, 1);
+  $li_next = theme('pager_next', (isset($tags[3]) ? $tags[3] : t('next ›')), $limit, $element, 1);
+  $li_last = theme('pager_last', (isset($tags[4]) ? $tags[4] : t('last »')), $limit, $element);
+  //$li_last = l('pager_last', 'last', array('class' => 'active'));
+
+  if ($pager_total[$element] > 1) {
+    if ($li_first) {
+      $left_items[] = array(
+        'class' => 'pager-first',
+        'data' => $li_first,
+      );
+    }
+    if ($li_previous) {
+      $left_items[] = array(
+        'class' => 'pager-previous',
+        'data' => $li_previous,
+      );
+    }
+
+    $output .= theme('item_list', $left_items, NULL, 'ul', array('class' => 'links paging-pager-left'));
+    $options = '';
+
+    // When there is more than one page, create the pager list.
+    if ($i != $pager_max) {
+      // Now generate the actual pager piece.
+      for (; $i <= $pager_max; $i++) {
+        $options .= '<option value="' . $i . '">' . $parameters['names'][$i-1] . '</option>';
+      }
+    }
+    // End generation.
+
+    $output .= '<div class="paging-drop-down-select"><select name="paging_drop_down_page">' . $options . '</select></div>';
+
+    if ($li_next) {
+      $right_items[] = array(
+        'class' => 'pager-next',
+        'data' => $li_next,
+      );
+    }
+    if ($li_last) {
+      $right_items[] = array(
+        'class' => 'pager-last',
+        'data' => $li_last,
+      );
+    }
+    
+    $output .= theme('item_list', $right_items, NULL, 'ul', array('class' => 'links paging-pager-right'));
+
+    drupal_add_js("$(document).ready(function() {
+      $('.paging-drop-down select').bind('change', function() {
+        location.replace(location.pathname + location.search);
+      });
+    });", 'inline');
+
+    return '<div class="paging-drop-down">' . $output . '</div>';
   }
 }

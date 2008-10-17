@@ -34,6 +34,7 @@ $(document).ready(function(){
   $('#paging-vertical-tabs').height(maxHeight);
 
   $(".paging-method input[@type=radio]").bind("change", paging_automatic_handler).each(paging_automatic_handler);
+  $(".paging-pager input[@type=radio]").bind("change", paging_pager_handler).each(paging_pager_handler);
 });
 
 function paging_automatic_handler(event) {
@@ -49,15 +50,12 @@ function paging_automatic_handler(event) {
   }
 }
 
-/*var page_names = new Array();
-if (component) {
-  component = component[1].split('|');
-  for (var x = 0; x < component.length; x++) {
-    var b = component[x].match(/page-(\d+):\s*(.+)/);
-    var key = x;
-    if (typeof b == null) {
-      key = b[1];
-    }
-    console.debug(b || component[x]);
+function paging_pager_handler(event) {
+  var type = $(this).attr('name').substr(20);
+  var checked = $('input[@name=paging_pager_widget_' + type + ']:checked').val();
+  $('.paging-pager-custom-' + type).parent().hide();
+
+  if (checked == 'custom') {
+    $('.paging-pager-custom-' + type).parent().fadeIn(500);
   }
-}*/
+}

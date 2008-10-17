@@ -1,3 +1,5 @@
+/* $Id$ */
+
 div.paging-button-wrapper {
   float: right;
   margin: 0;
@@ -11,4 +13,9 @@ div.teaser-button-wrapper {
 img.paging-separator-image {
   cursor: pointer;
   outline: none;
+}
+
+div.paging-drop-down, div.paging-drop-down .links {
+  text-align: center;
+  clear: both;
 }

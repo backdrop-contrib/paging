@@ -1,7 +1,10 @@
 // $Id$
+
+var names = new Array();
+
 Drupal.behaviors.paging = function(context) {
   $('textarea.teaser:not(.teaser-processed)', context).each(function() {
-    var include = $('#'+ this.id.substring(0, this.id.length - 2) +'include');
+    var include = $('#' + this.id.substring(0, this.id.length - 2) + 'include');
     var widget = Drupal.settings.paging.widget;
     
     if (widget == 1) {
@@ -19,13 +22,18 @@ Drupal.behaviors.paging = function(context) {
       $('input', button).val(Drupal.t('Insert page separator')).bind('click', paging_insert_separator);
     }
   });
-  $('#edit-body-wrapper').append('<div id="paging-names-wrapper"></div>');
-  $('textarea#edit-body').each(paging_handle_names).bind('click', paging_handle_names);
+  $('#node-form .body-field-wrapper').append('<div id="paging-names-wrapper"></div>');
+  $('textarea#edit-body').each(paging_handle_names).bind('click keyup blur', paging_handle_names);
+  $('#node-form').submit(function() {
+    $('textarea#edit-body').each(function() {
+      $(this).val('<!--pagenames:' + paging_return_names().join('||') + "-->" + this.value);
+    });
+  });
 }
 
 function paging_insert_separator() {
   var separator = Drupal.settings.paging.separator;
-  $('#edit-body').each(function() {
+  $('textarea#edit-body').each(function() {
     if (document.selection) {
       this.focus();
       document.selection.createRange().text = separator;
@@ -39,13 +47,12 @@ function paging_insert_separator() {
       this.value = this.value + separator;
     }
     this.focus();
-  });
+  }).trigger('click');
+
   return false;
 }
 
 function paging_handle_names(event) {
-  // Feature incomplete yet, hence return false:
-  return false;
   var separator = Drupal.settings.paging.separator;
   var str = $(this).val();
   if (str.indexOf(separator) != -1) {
@@ -53,32 +60,28 @@ function paging_handle_names(event) {
   }
   var match = str.match(/<!--pagenames:(.*?)-->/);
   
-  console.debug(match);
-  var names = match[1].split('|');
-  $(this).val(str.replace(/<!--pagenames:.*-->/, ''));
+  // TODO: names doesn't store updated names.
+  names = names.length ? names : match[1].split('||');
+  console.debug(names);
+  $(this).val(str.replace(/<!--pagenames:(.*?)-->/, ''));
   var output = '';
   var title = $('#edit-title').val();
   for (var x = 0; x < pages.length; x++) {
     output += '<label for="edit-title[' + x + ']">' + Drupal.t("Name of !number page: ", {'!number': (x + 1).ordinal()}) + '</label>' + "\t" + '<input type="text" class="form-text" value="' + (names[x] || Drupal.t('!title - Page !number', {'!title': title, '!number': (x + 1)})) + '" size="60" name="title[' + x + ']" maxlength="255"/>' + "\n";
   }
-  $('#paging-names-wrapper').html('<fieldset class="" id="paging-page-names"><legend class="">' + Drupal.t("Page names") + '</legend>' + output + '</fieldset>');
-    $('textarea#edit-body').each(function() {
-      $(this).val('<!--pagenames:' + paging_return_names().join('|') + "-->" + this.value);
-    });
+  // @TODO Handle names when fields are updated.
+  $('#paging-names-wrapper').html('<fieldset class="" id="paging-page-names"><legend class="">' + Drupal.t("Page names") + '</legend>' + output + '</fieldset>');//.find('input').bind('click keyup blur', paging_handle_names);
 }
 
 function paging_return_names() {
-  var prepend = new Array();
-  var count = 0;
-  $('#node-form').submit(function() {
-    $('#paging-page-names').each(function() {
-      $(this).find('input').each(function() {
-        prepend[count] = $(this).val();
-        count++;
-      });
+  var names = new Array();
+  var i = 0;
+  $('#paging-page-names').find('input[@type=text]').each(function() {
+      names[i] = $(this).val();
+      i++;
     }).remove();
-  });
-  return '<!--pagenames:' + paging_return_names().join('|') + "-->";
+
+  return names;
 }
 
 Number.prototype.ordinal = function () {
