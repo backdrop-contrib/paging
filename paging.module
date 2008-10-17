@@ -122,11 +122,11 @@ function paging_settings() {
         'pager' => t('Default <small>- <code>!pager</code></small>', array(
           '!pager' => l('theme_pager()', 'http://api.drupal.org/api/function/theme_pager/6', array('attributes' => array('target' => '_blank'))),
         )),
-	      'paging_drop_down' => t('Drop down list'),
+	      'paging_drop_down' => t('Drop down list <small>- <code>theme_paging_drop_down()</code></small>'),
         'custom' => t('Custom'),
       ),
       '#required' => TRUE,
-      '#description' => t('Choose the style of appearance for the page navigation links.'),
+      '#description' => t('Choose style of page navigation. See also: !link.', array('!link' => l('Overriding theme output', 'http://drupal.org/node/173880#function-override'))),
       '#default_value' => variable_get('paging_pager_widget_' . $type, 'pager'),
       '#attributes' => array('class' => 'paging-pager'),
     );
