@@ -39,7 +39,7 @@ function paging_theme() {
  */
 function paging_menu() {
   $items = array();
-  
+
   $items['admin/settings/paging'] = array(
     'title' => t('Paging'),
     'description' => t('Enable or disable paging, configure separator string, configure <em>Read more</em> link and toggle automatic paging for different content types.'),
@@ -233,8 +233,9 @@ function paging_settings() {
 function paging_form_alter(&$form, $form_state, $form_id) {
   // If paging is enabled for the node type.
   if (isset($form['type']) && isset($form['#node']) && variable_get('paging_enabled_' . $form['#node']->type, 0)) {
-    $widget = variable_get('paging_separator_widget_' . $form['#node']->type, 0);
     $separator = variable_get('paging_separator_' . $form['#node']->type, '<!--pagesbreak-->');
+    $widget = variable_get('paging_separator_widget_' . $form['#node']->type, 0);
+    $page_names = variable_get('paging_names_enabled_' . $form['#node']->type, 0);
     $module_path = drupal_get_path('module', 'paging');
 
 	  // Expose configuration variables.
@@ -242,6 +243,7 @@ function paging_form_alter(&$form, $form_state, $form_id) {
       'paging' => array(
         'separator' => $separator,
         'widget' => $widget,
+        'page_names' => $page_names,
         'module_path' => $module_path),
     ), 'setting');
 
@@ -373,6 +375,13 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $pager_total[$element] = $node->page_count;
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $node->body = check_markup($node->pages[$page], $node->format, false);
+
+          foreach ($node->page_names as $key => $page_name) {
+            if (empty($page_name)) {
+              $node->page_names[$key] = t('!title - Page !number', array('!title' => $node->title, '!number' => ($key+1)));;
+            }
+          }
+
           $node->body .= paging_pager_style($element, $node->type, array('names' => $node->page_names));
           // Remove internal <!--paging_filter--> tag from final output.
           $node->body = str_replace(array('<!--paging_filter-->', '<' . $matches[0] . '>', '&3t;' . $matches[0] . '>'), '', $node->body);
@@ -395,12 +404,12 @@ function paging_pager_style($element = NULL, $node_type = NULL, $parameters = NU
   if ($theme_widget == 'custom') {
     $theme_widget = variable_get('paging_pager_widget_custom_' . $node_type, 'pager');
   }
-  
+
   if ($theme_widget == 'paging_drop_down') {
     // Include CSS for 'Drop down pager' styling.
     drupal_add_css(drupal_get_path('module', 'paging') . '/paging.css', 'module');
   }
-  
+
   // Decode the comma. Ugly.
   $output = '<div class="links">' . str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters)) . '</div>';
   return $output;
@@ -421,7 +430,7 @@ function paging_link($type, $node = NULL, $teaser = FALSE) {
       'href' => drupal_get_path_alias("node/$node->nid"),
       'attributes' => array('title' => t('Read the rest of this posting.'), 'class' => 'read-more-paging'),
       'query' => 'page=0,1'
-    ); 
+    );
   }
   return $links;
 }
@@ -469,7 +478,7 @@ function paging_filter_tips($delta, $format, $long = FALSE) {
   }
 }
 
-/**
+   /**
  * Format a query pager.
  *
  * Menu callbacks that display paged query results should call theme('pager') to
@@ -527,7 +536,6 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
   $li_previous = theme('pager_previous', (isset($tags[1]) ? $tags[1] : t('‹ previous')), $limit, $element, 1);
   $li_next = theme('pager_next', (isset($tags[3]) ? $tags[3] : t('next ›')), $limit, $element, 1);
   $li_last = theme('pager_last', (isset($tags[4]) ? $tags[4] : t('last »')), $limit, $element);
-  //$li_last = l('pager_last', 'last', array('class' => 'active'));
 
   if ($pager_total[$element] > 1) {
     if ($li_first) {
@@ -543,6 +551,12 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
       );
     }
 
+
+    $output .= '<table id="paging-title-navigation">
+    <tbody>
+      <tr>
+        <td class="previous-pages">';
+
     $output .= theme('item_list', $left_items, NULL, 'ul', array('class' => 'links paging-pager-left'));
     $options = '';
 
@@ -550,12 +564,25 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
     if ($i != $pager_max) {
       // Now generate the actual pager piece.
       for (; $i <= $pager_max; $i++) {
-        $options .= '<option value="' . $i . '">' . $parameters['names'][$i-1] . '</option>';
+        $page = $_GET['page'] ? $_GET['page'] : '0,' . ($i-1);
+        if (strpos($page, ',') == 1) {
+          $page = $page[0] . ',' . ($i-1);
+        }
+        else if (!empty($_GET['page']) && strpos($page, ',') === FALSE) {
+          $page = $_GET['page'] . ',' . ($i-1);
+        }
+        $url = $i == 1 ? url($_GET['q']) : url($_GET['q'], array('query' => array('page' => $page)));
+        $options .= '<option value="' . $url . '">' . $parameters['names'][$i-1] . '</option>';
       }
     }
     // End generation.
 
-    $output .= '<div class="paging-drop-down-select"><select name="paging_drop_down_page">' . $options . '</select></div>';
+    $output .= '</td><td class="paging-drop-down">';
+
+    $output .= '<select name="paging_drop_down_page">' . $options . '</select>';
+
+    $output .= '</td>
+        	<td class="next-pages">';
 
     if ($li_next) {
       $right_items[] = array(
@@ -569,15 +596,30 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
         'data' => $li_last,
       );
     }
-    
+
     $output .= theme('item_list', $right_items, NULL, 'ul', array('class' => 'links paging-pager-right'));
 
+    $output .= '</td>
+        </tr>
+      </tbody>
+    </table>';
+
     drupal_add_js("$(document).ready(function() {
-      $('.paging-drop-down select').bind('change', function() {
-        location.replace(location.pathname + location.search);
+      var vars = [], hash;
+
+      var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+
+      for (var i = 0; i < hashes.length; i++) {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+      }
+
+      $('.paging-drop-down select').val(location.pathname + '?page=' + vars['page']).bind('change', function() {
+        window.location = $(this).val();
       });
     });", 'inline');
 
-    return '<div class="paging-drop-down">' . $output . '</div>';
+    return $output;
   }
 }

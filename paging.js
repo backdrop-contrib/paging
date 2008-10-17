@@ -3,14 +3,14 @@
 var names = new Array();
 
 Drupal.behaviors.paging = function(context) {
-  $('textarea.teaser:not(.teaser-processed)', context).each(function() {
+  $('textarea.teaser').each(function() {
     var include = $('#' + this.id.substring(0, this.id.length - 2) + 'include');
     var widget = Drupal.settings.paging.widget;
-    
+
     if (widget == 1) {
+    // Add paging separator string image.
       var path = Drupal.settings.basePath + Drupal.settings.paging.module_path;
       var string = Drupal.t('Insert page separator');
-      // Add paging separator string image.
       var image = $('<div class="paging-button-wrapper"><img alt="" src="' + path + '/paging-separator.png" class="paging-separator-image" /></div>');
       $(include).parent().parent().before(image);
       $('img', image).attr('alt', string).attr('title', string).bind('click', paging_insert_separator);
@@ -22,13 +22,17 @@ Drupal.behaviors.paging = function(context) {
       $('input', button).val(Drupal.t('Insert page separator')).bind('click', paging_insert_separator);
     }
   });
-  $('#node-form .body-field-wrapper').append('<div id="paging-names-wrapper"></div>');
-  $('textarea#edit-body').each(paging_handle_names).bind('click keyup blur', paging_handle_names);
-  $('#node-form').submit(function() {
-    $('textarea#edit-body').each(function() {
-      $(this).val('<!--pagenames:' + paging_return_names().join('||') + "-->" + this.value);
+
+  var page_names = Drupal.settings.paging.page_names;
+  if (page_names == 1) {
+    $('#edit-body-wrapper').after('<div id="paging-names-wrapper"></div>');
+    $('textarea#edit-body').each(paging_handle_names).bind('click keyup blur', paging_handle_names);
+    $('#node-form').submit(function() {
+      $('textarea#edit-body').each(function() {
+        $(this).val('<!--pagenames:' + paging_return_names().join('||') + "-->" + this.value);
+      });
     });
-  });
+  }
 }
 
 function paging_insert_separator() {
@@ -59,18 +63,18 @@ function paging_handle_names(event) {
     pages = str.split(separator);
   }
   var match = str.match(/<!--pagenames:(.*?)-->/);
-  
-  // TODO: names doesn't store updated names.
+
+  // TODO: names var doesn't store updated names.
   names = names.length ? names : match[1].split('||');
   console.debug(names);
   $(this).val(str.replace(/<!--pagenames:(.*?)-->/, ''));
   var output = '';
   var title = $('#edit-title').val();
   for (var x = 0; x < pages.length; x++) {
-    output += '<label for="edit-title[' + x + ']">' + Drupal.t("Name of !number page: ", {'!number': (x + 1).ordinal()}) + '</label>' + "\t" + '<input type="text" class="form-text" value="' + (names[x] || Drupal.t('!title - Page !number', {'!title': title, '!number': (x + 1)})) + '" size="60" name="title[' + x + ']" maxlength="255"/>' + "\n";
+    output += '<label for="edit-paging-title[' + x + ']">' + Drupal.t("Name of !number page: ", {'!number': (x + 1).ordinal()}) + '</label>' + "\t" + '<input type="text" class="form-text" value="' + (names[x] || Drupal.t('!title - Page !number', {'!title': title, '!number': (x + 1)})) + '" size="20" name="edit-paging-title[' + x + ']" maxlength="255"/>' + "\n";
   }
-  // @TODO Handle names when fields are updated.
-  $('#paging-names-wrapper').html('<fieldset class="" id="paging-page-names"><legend class="">' + Drupal.t("Page names") + '</legend>' + output + '</fieldset>');//.find('input').bind('click keyup blur', paging_handle_names);
+  // TODO: Handle names when fields are updated.
+  $('#paging-names-wrapper').html('<fieldset class="collapsible form-item" id="paging-page-names" style="overflow: hidden;"><legend class="">' + Drupal.t("Page names") + '</legend><div class="form-item">' + output + '</div></fieldset>');//.find('input').bind('click keyup blur', paging_handle_names);
 }
 
 function paging_return_names() {
@@ -79,7 +83,7 @@ function paging_return_names() {
   $('#paging-page-names').find('input[@type=text]').each(function() {
       names[i] = $(this).val();
       i++;
-    }).remove();
+    }).parents('fieldset').remove();
 
   return names;
 }

@@ -15,7 +15,16 @@ img.paging-separator-image {
   outline: none;
 }
 
-div.paging-drop-down, div.paging-drop-down .links {
-  text-align: center;
-  clear: both;
+.paging-drop-down {
+  vertical-align: bottom;
+}
+
+#paging-title-navigation {
+  margin: 0 auto;
+  width: auto;
+}
+
+#paging-title-navigation ul.links li {
+  padding-left: .5em;
+  padding-right: .5em;
 }
