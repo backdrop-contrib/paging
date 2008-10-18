@@ -339,14 +339,6 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       }
       break;
     case 'view':
-      /*foreach ($pages as $page) {
-        preg_match('/[(?<page>\d+):]\s*(?<name>.+)/', $page, $matches);
-        unset($matches[0], $matches[1], $matches[2]);
-        $key = !empty($matches['page']) ? $matches['page'] : 's';
-        $value = !empty($matches['name']) ? $matches['name'] : 's';
-        $page_names[$key] = $value;
-        d($matches);
-      }  */
       preg_match('<!--pagenames:(.*?)-->', $node->pages[0], $matches);
       $node->page_names = explode('||', $matches[1]);
 
@@ -382,25 +374,24 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             }
           }
 
-          $node->body .= paging_pager_style($element, $node->type, array('names' => $node->page_names));
+          $node->body .= paging_pager_style($element, $node->type, $node->page_names);
           // Remove internal <!--paging_filter--> tag from final output.
-          $node->body = str_replace(array('<!--paging_filter-->', '<' . $matches[0] . '>', '&3t;' . $matches[0] . '>'), '', $node->body);
+          $node->body = str_replace('<!--paging_filter-->', '', $node->body);
         }
         else if ($teaser) {
           // Remove internal <!--paging_filter--> tag from final output.
-          $node_teaser = str_replace(array('<!--paging_filter-->', '<' . $matches[0] . '>', '&lt;' . $matches[0] . '&gt;'), '', $node_teaser);
+          $node_teaser = str_replace('<!--paging_filter-->', '', $node_teaser);
         }
       }
       break;
   }
 }
 
-function paging_pager_style($element = NULL, $node_type = NULL, $parameters = NULL) {
+function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NULL) {
   static $output;
-  if ($output) {
-    //return $output;
-  }
+
   $theme_widget = variable_get('paging_pager_widget_' . $node_type, 'pager');
+
   if ($theme_widget == 'custom') {
     $theme_widget = variable_get('paging_pager_widget_custom_' . $node_type, 'pager');
   }
@@ -411,12 +402,8 @@ function paging_pager_style($element = NULL, $node_type = NULL, $parameters = NU
   }
 
   // Decode the comma. Ugly.
-  $output = '<div class="links">' . str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters)) . '</div>';
+  $output = '<div class="links">' . str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters, 9, $page_names)) . '</div>';
   return $output;
-}
-
-function paging_preprocess_node(&$vars) {
- // $vars['paging'] = paging_pager_style();
 }
 
 /**
@@ -478,7 +465,7 @@ function paging_filter_tips($delta, $format, $long = FALSE) {
   }
 }
 
-   /**
+/**
  * Format a query pager.
  *
  * Menu callbacks that display paged query results should call theme('pager') to
@@ -500,7 +487,7 @@ function paging_filter_tips($delta, $format, $long = FALSE) {
  *
  * @ingroup themeable
  */
-function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $parameters = array(), $quantity = 9) {
+function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $parameters = array(), $quantity = 9, $page_names = array()) {
   global $pager_page_array, $pager_total;
 
   $output = '';
@@ -572,7 +559,7 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
           $page = $_GET['page'] . ',' . ($i-1);
         }
         $url = $i == 1 ? url($_GET['q']) : url($_GET['q'], array('query' => array('page' => $page)));
-        $options .= '<option value="' . $url . '">' . $parameters['names'][$i-1] . '</option>';
+        $options .= '<option value="' . $url . '">' . $page_names[$i-1] . '</option>';
       }
     }
     // End generation.
