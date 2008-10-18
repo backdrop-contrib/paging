@@ -5,10 +5,6 @@
 // by Earl Miles.
 // Yet again rewritten, extended and maintained by Gurpartap Singh.
 
-function d($msg) {
-  drupal_set_message('<pre>' . print_r($msg, TRUE) . '</pre>');
-}
-
 /**
  * Implementation of hook_help().
  */
