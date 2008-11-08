@@ -151,13 +151,17 @@ function paging_settings() {
       '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
     );
     $form[$type]['paging_config']['paging_right']['paging_names_enabled_' . $type] = array(
-      '#type' => 'radios',
-      '#title' => t('Page names interface'),
-      '#options' => array(t('Disabled'), t('Enabled')),
-      '#required' => TRUE,
+      '#type' => 'checkbox',
+      '#title' => t('Display Page names interface'),
       '#description' => t('Add an interface to manage page names, which otherwise is a text format within content body, like <em>&lt;!--pagenames:First page||Page no. 2||Chapter 3--&gt;</em>.'),
       '#default_value' => variable_get('paging_names_enabled_' . $type, 0),
       '#attributes' => array('class' => 'paging-names'),
+    );
+    $form[$type]['paging_config']['paging_right']['paging_name_title_' . $type] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Change page title to name of current page'),
+      '#description' => t("Change the node's and browser window's title into name of the current page."),
+      '#default_value' => variable_get('paging_name_title_' . $type, 0),
     );
     $form[$type]['paging_config']['paging_right']['paging_automatic_method_' . $type] = array(
       '#type' => 'radios',
@@ -364,15 +368,20 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $node->body = check_markup($node->pages[$page], $node->format, false);
 
-          foreach ($node->page_names as $key => $page_name) {
-            if (empty($page_name)) {
-              $node->page_names[$key] = t('!title - Page !number', array('!title' => $node->title, '!number' => ($key+1)));;
+          // Populate empty page names.
+          for ($i = 0;$i < $node->page_count;$i++) {
+            if (empty($node->page_names[$i])) {
+              $node->page_names[$i] = t('!title - Page !number', array('!title' => $node->title, '!number' => ($i+1)));;
             }
           }
 
           $node->body .= paging_pager_style($element, $node->type, $node->page_names);
           // Remove internal <!--paging_filter--> tag from final output.
           $node->body = str_replace('<!--paging_filter-->', '', $node->body);
+          
+          if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
+            drupal_set_title($node->page_names[$page]);
+          }
         }
         else if ($teaser) {
           // Remove internal <!--paging_filter--> tag from final output.

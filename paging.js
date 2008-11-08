@@ -25,7 +25,7 @@ Drupal.behaviors.paging = function(context) {
 
   var page_names = Drupal.settings.paging.page_names;
   if (page_names == 1) {
-    $('#edit-body-wrapper').after('<div id="paging-names-wrapper"></div>');
+    $('#edit-body-wrapper').after('<div id="paging-names-wrapper"><fieldset class="collapsible form-item" id="paging-page-names" style="overflow: hidden;"><legend class="">' + Drupal.t("Page names") + '</legend><div id="paging-names-inner" class="form-item"></div></fieldset></div>');
     $('textarea#edit-body').each(paging_handle_names).bind('click keyup blur', paging_handle_names);
     $('#node-form').submit(function() {
       $('textarea#edit-body').each(function() {
@@ -57,24 +57,30 @@ function paging_insert_separator() {
 }
 
 function paging_handle_names(event) {
+  var output = '';
   var separator = Drupal.settings.paging.separator;
   var str = $(this).val();
-  if (str.indexOf(separator) != -1) {
-    pages = str.split(separator);
-  }
-  var match = str.match(/<!--pagenames:(.*?)-->/);
+
+  var pages = str.indexOf(separator) != -1 ? str.split(separator) : 0;
+
+  var match = str.match(/<!--pagenames:(.*?)-->/) || [];
+  $(this).val(str.replace(/<!--pagenames:(.*?)-->/, ''));
 
   // TODO: names var doesn't store updated names.
-  names = names.length ? names : match[1].split('||');
-  console.debug(names);
-  $(this).val(str.replace(/<!--pagenames:(.*?)-->/, ''));
-  var output = '';
-  var title = $('#edit-title').val();
-  for (var x = 0; x < pages.length; x++) {
-    output += '<label for="edit-paging-title[' + x + ']">' + Drupal.t("Name of !number page: ", {'!number': (x + 1).ordinal()}) + '</label>' + "\t" + '<input type="text" class="form-text" value="' + (names[x] || Drupal.t('!title - Page !number', {'!title': title, '!number': (x + 1)})) + '" size="20" name="edit-paging-title[' + x + ']" maxlength="255"/>' + "\n";
+  names = names || (match[1] ? match[1].split('||') : []);
+
+  if (pages.length > 0) {
+    for (var x = 0; x < pages.length; x++) {
+      var title = $('#edit-title').val();
+      names[x] = (names[x] || Drupal.t('!title - Page !number', {'!title': title, '!number': (x + 1)}));
+      output += '<label for="edit-paging-title[' + x + ']">' + Drupal.t("Name of !number page: ", {'!number': (x + 1).ordinal()}) + '</label>' + "\t" + '<input type="text" class="form-text" value="' + names[x] + '" size="20" name="edit-paging-title[' + x + ']" maxlength="255"/>' + "\n";
+    }
+    $('#paging-names-wrapper').show();
+    $('#paging-names-wrapper #paging-names-inner').html(output);
   }
-  // TODO: Handle names when fields are updated.
-  $('#paging-names-wrapper').html('<fieldset class="collapsible form-item" id="paging-page-names" style="overflow: hidden;"><legend class="">' + Drupal.t("Page names") + '</legend><div class="form-item">' + output + '</div></fieldset>');//.find('input').bind('click keyup blur', paging_handle_names);
+  else {
+    $('#paging-names-wrapper').hide();
+  }
 }
 
 function paging_return_names() {
