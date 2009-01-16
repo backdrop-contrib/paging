@@ -258,6 +258,44 @@ function paging_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
+ * Implementation of hook_block().
+ */
+function paging_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks[0] = array(
+      'info' => t('Paging Navigation'),
+      'weight' => 0,
+      'status' => 1,
+      'region' => 'left'
+    );
+
+    return $blocks;
+  }
+  else if ($op == 'view' && $delta == 0 && arg(0) == 'node' && is_numeric(arg(1))) {
+    $nid = arg(1);
+    $block = array(
+      'subject' => t('Page Navigation'),
+      'content' => paging_render_names($nid),
+    );
+    return $block;
+  }
+}
+
+function paging_render_names($nid) {
+  global $pager_page_array;
+  $nid = $nid ? $nid : arg(1);
+  $names = paging_fetch_names($nid);
+  $title = db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $nid));
+  $names = _paging_populate_empty_names($names, $title);
+  $rendered_links = array();
+  foreach ($names as $key => $name) {
+    $page_new = pager_load_array($key, 1, $pager_page_array);
+    $rendered_links[] = theme('pager_link', $name, $page_new, 1);
+  }
+  return theme('item_list', $rendered_links);
+}
+
+/**
  * Implementation of hook_nodeapi().
  */
 function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
@@ -339,8 +377,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       }
       break;
     case 'view':
-      preg_match('<!--pagenames:(.*?)-->', $node->pages[0], $matches);
-      $node->page_names = explode('||', $matches[1]);
+      $node->page_names = paging_fetch_names($node->pages[0]);
 
       if ($teaser && !($node->build_mode == NODE_BUILD_PREVIEW) && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
         // Check to see if the teaser is longer than our first page.
@@ -368,12 +405,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $node->body = check_markup($node->pages[$page], $node->format, false);
 
-          // Populate empty page names.
-          for ($i = 0;$i < $node->page_count;$i++) {
-            if (empty($node->page_names[$i])) {
-              $node->page_names[$i] = t('!title - Page !number', array('!title' => $node->title, '!number' => ($i+1)));;
-            }
-          }
+          $node->page_names = _paging_populate_empty_names($node->page_names, $node->title);
 
           $node->body .= paging_pager_style($element, $node->type, $node->page_names);
           // Remove internal <!--paging_filter--> tag from final output.
@@ -390,6 +422,37 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       }
       break;
   }
+}
+
+/**
+ * Populate empty page names.
+ */
+function _paging_populate_empty_names($names, $title) {
+  foreach ($names as $key => $name) {
+    if (empty($names[$key])) {
+      $names[$key] = t('!title - Page !number', array('!title' => $title, '!number' => ($key+1)));;
+    }
+  }
+  return $names;
+}
+
+function paging_fetch_names($node) {
+  if (is_numeric($node)) {
+    $node = node_load($node);
+    // Support for CCK.
+    if (isset($node->field_body[0]['view'])) {
+      $node = $node->field_body[0]['view'];
+    }
+    // Support for CCK.
+    elseif (isset($node->field_body[0]['value'])) {
+      $node = $node->field_body[0]['value'];
+    }
+    else {
+      $node = $node->body;
+    }
+  }
+  preg_match('<!--pagenames:(.*?)-->', $node, $matches);
+  return explode('||', $matches[1]);
 }
 
 function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NULL) {
@@ -597,20 +660,20 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
     </table>';
 
     drupal_add_js("$(document).ready(function() {
-      var vars = [], hash;
+  var vars = [], hash;
 
-      var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+  var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
 
-      for (var i = 0; i < hashes.length; i++) {
-        hash = hashes[i].split('=');
-        vars.push(hash[0]);
-        vars[hash[0]] = hash[1];
-      }
+  for (var i = 0; i < hashes.length; i++) {
+    hash = hashes[i].split('=');
+    vars.push(hash[0]);
+    vars[hash[0]] = hash[1];
+  }
 
-      $('.paging-drop-down select').val(location.pathname + '?page=' + vars['page']).bind('change', function() {
-        window.location = $(this).val();
-      });
-    });", 'inline');
+  $('.paging-drop-down select').val(location.pathname + '?page=' + vars['page']).bind('change', function() {
+    window.location = $(this).val();
+  });
+});", 'inline');
 
     return $output;
   }
