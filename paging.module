@@ -1,9 +1,8 @@
 <?php
 // $Id$
 // Original module written by Marco Scutari.
-// Rewritten and considerably shortened and made more Drupal-friendly
-// by Earl Miles.
-// Yet again rewritten, extended and maintained by Gurpartap Singh.
+// Rewritten and considerably shortened and made more Drupal-friendly by Earl Miles.
+// Yet again rewritten, extended and currently maintained by Gurpartap Singh.
 
 /**
  * Implementation of hook_help().
@@ -110,6 +109,12 @@ function paging_settings() {
       '#description' => t('Choose the style of separator string widget. This widget attaches itself to the body textarea and when clicked, inserts separator at cursor position.'),
       '#default_value' => variable_get('paging_separator_widget_' . $type, 0),
       '#attributes' => array('class' => 'paging-method'),
+    );    
+    $form[$type]['paging_config']['paging_left']['paging_read_more_enabled_' . $type] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Link "Read more" to second page'),
+      '#description' => t('When enabled, the "Read more" link under teasers will link to the second page of the content, iff the teaser is larger than the first page or if they are the same.'),
+      '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
     );
     $form[$type]['paging_config']['paging_left']['paging_pager_widget_' . $type] = array(
       '#type' => 'radios',
@@ -143,12 +148,21 @@ function paging_settings() {
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
       '#attributes' => array('class' => 'paging-right'),
-    );
-    $form[$type]['paging_config']['paging_right']['paging_read_more_enabled_' . $type] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Link "Read more" to second page'),
-      '#description' => t('When enabled, the "Read more" link under teasers will link to the second page of the content, iff the teaser is larger than the first page or if they are the same.'),
-      '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
+    );    
+    $form[$type]['paging_config']['paging_right']['paging_pager_widget_position_' . $type] = array(
+      '#type' => 'radios',
+      '#title' => t('Pager location'),
+      '#options' => array(
+        'below' => t('Below content'),
+        'above' => t('Above content'),
+        'both' => t('Below and above content'),
+        'manual' => t('None (No output)'),
+        
+      ),
+      '#required' => TRUE,
+      '#description' => t('Choose the position of page navigation. If set to %none, <code>@paging</code> can be used to place it at a customizable location.', array('%none' => t('None'), '@paging' => '$node->paging')),
+      '#default_value' => variable_get('paging_pager_widget_position_' . $type, 'below'),
+      '#attributes' => array('class' => 'paging-pager'),
     );
     $form[$type]['paging_config']['paging_right']['paging_names_enabled_' . $type] = array(
       '#type' => 'checkbox',
@@ -411,7 +425,15 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
 
           $node->page_names = _paging_populate_empty_names(array_merge(array_fill(0, ($node->page_count - 1), ''), $node->page_names), $node->title);
 
-          $node->body .= paging_pager_style($element, $node->type, $node->page_names);
+          $position = variable_get('paging_pager_widget_position_' . $node->type, 'below');
+          $node->paging = paging_pager_style($element, $node->type, $node->page_names);
+          if ($position == 'above' || $position == 'both') {
+            $node->body = $node->paging . $node->body;
+          }
+          if ($position == 'below' || $position == 'both') {
+            $node->body .= $node->paging;
+          }
+
           // Set a global value for hook_block() to be able to access.
           $GLOBALS['display_paging_block'] = TRUE;
           if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
