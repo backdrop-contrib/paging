@@ -1,5 +1,13 @@
 // $Id$
 
+Number.prototype.ordinal = function () {
+  return this + (
+    (this % 10 == 1 && this % 100 != 11) ? '<sup>st</sup>' :
+    (this % 10 == 2 && this % 100 != 12) ? '<sup>nd</sup>' :
+    (this % 10 == 3 && this % 100 != 13) ? '<sup>rd</sup>' : '<sup>th</sup>'
+  );
+};
+
 function paging_handle_names(pages) {
   var output = '';
 
@@ -23,7 +31,7 @@ function paging_handle_names(pages) {
 }
 
 function paging_return_names() {
-  var names = new Array();
+  var names = [];
   var i = 0;
   $('#paging-page-names').find('input[@type=text]').each(function() {
     names[i] = $(this).val();
@@ -52,14 +60,6 @@ function paging_insert_separator() {
   }).trigger('click');
 
   return false;
-}
-
-Number.prototype.ordinal = function () {
-  return this + (
-    (this % 10 == 1 && this % 100 != 11) ? '<sup>st</sup>' :
-    (this % 10 == 2 && this % 100 != 12) ? '<sup>nd</sup>' :
-    (this % 10 == 3 && this % 100 != 13) ? '<sup>rd</sup>' : '<sup>th</sup>'
-  );
 }
 
 Drupal.behaviors.paging = function(context) {
@@ -100,7 +100,7 @@ Drupal.behaviors.paging = function(context) {
       var separator = Drupal.settings.paging.separator;
       var count = 0;
       var current_names = paging_return_names();
-      var pages = new Array((current_names[count] ? current_names[count] : ''));
+      var pages = [(current_names[count] ? current_names[count] : '')];
       var pos = str.indexOf(separator);
       while (pos != -1) {
         count++;
@@ -119,4 +119,4 @@ Drupal.behaviors.paging = function(context) {
       });
     });
   }
-}
+};

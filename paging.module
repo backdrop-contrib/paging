@@ -25,6 +25,7 @@ More pages here.</pre>', array('%separator' => '<!--pagebreak-->')) . '<p>' . t(
  */
 function paging_theme() {
   return array(
+    // Secondary Pager Navigation with page names in drop down list.
     'paging_drop_down' => array('tags' => NULL, 'limit' => NULL, 'element' => NULL, 'parameters' => NULL, 'quantity' => NULL),
   );
 }
@@ -37,7 +38,7 @@ function paging_menu() {
 
   $items['admin/settings/paging'] = array(
     'title' => t('Paging'),
-    'description' => t('Enable or disable paging, configure separator string, configure <em>Read more</em> link and toggle automatic paging for different content types.'),
+    'description' => t('Enable or disable paging, configure separator string, toggle automatic paging and more for each content types.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('paging_settings'),
     'access arguments' => array('administer site configuration'),
@@ -68,10 +69,13 @@ function paging_settings() {
     }
   }
   if (!$paging_filter) {
+    // Warn if paging filter is not yet enabled for any input format.
     drupal_set_message(t('Paging filter has not yet been enabled for any input formats. !link!', array('!link' => l(t('Take action'), 'admin/settings/filters'))), 'warning paging-warning');
   }
 
+  // Traverse available node types.
   foreach (node_get_types('names') as $type => $name) {
+    // Container fieldset.
     $form[$type]['paging_config'] = array(
       '#type' => 'fieldset',
       '#title' => $name,
@@ -79,18 +83,22 @@ function paging_settings() {
       '#collapsed' => FALSE,
       '#attributes' => array('class' => 'paging-fieldset', 'id' => 'paging-type-' . $type),
     );
+  
+    // Left column fieldset.
     $form[$type]['paging_config']['paging_left'] = array(
       '#type' => 'fieldset',
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
       '#attributes' => array('class' => 'paging-left'),
     );
+    // Paging toggle checkbox.
     $form[$type]['paging_config']['paging_left']['paging_enabled_' . $type] = array(
       '#type' => 'checkbox',
       '#title' => '',
       '#default_value' => variable_get('paging_enabled_' . $type, 0),
       '#attributes' => array('class' => 'paging-enabled'),
     );
+    // Paging separator string.
     $form[$type]['paging_config']['paging_left']['paging_separator_' . $type] = array(
       '#type' => 'textfield',
       '#title' => t('Page separator string'),
@@ -100,6 +108,8 @@ function paging_settings() {
       '#default_value' => variable_get('paging_separator_' . $type, '<!--pagebreak-->'),
       '#description' => t('Use an HTML tag that will render reasonably when paging is not enabled, such as %pagebreak or %hr.', array('%pagebreak' => '<!--pagebreak-->', '%hr' => '<hr />')),
     );
+    // "Paging separator" insertion widget. Can be a normal or image form button.
+    // Accompanied by paging.js.
     $form[$type]['paging_config']['paging_left']['paging_separator_widget_' . $type] = array(
       '#type' => 'radios',
       '#title' => t('Paging separator widget'),
@@ -109,13 +119,16 @@ function paging_settings() {
       '#description' => t('Choose the style of separator string widget. This widget attaches itself to the body textarea and when clicked, inserts separator at cursor position.'),
       '#default_value' => variable_get('paging_separator_widget_' . $type, 0),
       '#attributes' => array('class' => 'paging-method'),
-    );    
+    );
+    // Change "Read more" path when first page is greater than or equal to the teaser.
     $form[$type]['paging_config']['paging_left']['paging_read_more_enabled_' . $type] = array(
       '#type' => 'checkbox',
       '#title' => t('Link "Read more" to second page'),
       '#description' => t('When enabled, the "Read more" link under teasers will link to the second page of the content, iff the teaser is larger than the first page or if they are the same.'),
       '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
     );
+    // Style/theme of page navigation links. "Custom" option enables a textfield to enter function name.
+    // Accompanied by paging.js.
     $form[$type]['paging_config']['paging_left']['paging_pager_widget_' . $type] = array(
       '#type' => 'radios',
       '#title' => t('Pager style'),
@@ -131,6 +144,7 @@ function paging_settings() {
       '#default_value' => variable_get('paging_pager_widget_' . $type, 'pager'),
       '#attributes' => array('class' => 'paging-pager'),
     );
+    // Textfield to accept custom pager theme function name.
     $form[$type]['paging_config']['paging_left']['paging_pager_widget_custom_' . $type] = array(
       '#type' => 'textfield',
       '#title' => t('Custom pager theme function'),
@@ -143,27 +157,30 @@ function paging_settings() {
       '#field_prefix' => 'theme_',
     );
 
+    // Right column fieldset.
     $form[$type]['paging_config']['paging_right'] = array(
       '#type' => 'fieldset',
       '#collapsible' => FALSE,
       '#collapsed' => FALSE,
       '#attributes' => array('class' => 'paging-right'),
-    );    
+    );
+    // Positions to place the page navigation links at.
     $form[$type]['paging_config']['paging_right']['paging_pager_widget_position_' . $type] = array(
       '#type' => 'radios',
-      '#title' => t('Pager location'),
+      '#title' => t('Pager position'),
       '#options' => array(
         'below' => t('Below content'),
         'above' => t('Above content'),
         'both' => t('Below and above content'),
         'manual' => t('None (No output)'),
-        
+
       ),
       '#required' => TRUE,
       '#description' => t('Choose the position of page navigation. If set to %none, <code>@paging</code> can be used to place it at a customizable location.', array('%none' => t('None'), '@paging' => '$node->paging')),
       '#default_value' => variable_get('paging_pager_widget_position_' . $type, 'below'),
       '#attributes' => array('class' => 'paging-pager'),
     );
+    // Toggle UI that helps with assigning names to pages. Disabled with automatic paging.
     $form[$type]['paging_config']['paging_right']['paging_names_enabled_' . $type] = array(
       '#type' => 'checkbox',
       '#title' => t('Display Page names interface'),
@@ -171,12 +188,15 @@ function paging_settings() {
       '#default_value' => variable_get('paging_names_enabled_' . $type, 0),
       '#attributes' => array('class' => 'paging-names'),
     );
+    // Set the browser's title to current page's name.
     $form[$type]['paging_config']['paging_right']['paging_name_title_' . $type] = array(
       '#type' => 'checkbox',
       '#title' => t('Change page title to name of current page'),
       '#description' => t("Change the node's and browser window's title into name of the current page."),
       '#default_value' => variable_get('paging_name_title_' . $type, 0),
     );
+    // Optional automatic paging method. Each option opens the corresponding character/word length select list.
+    // Accompanied by paging.admin.js.
     $form[$type]['paging_config']['paging_right']['paging_automatic_method_' . $type] = array(
       '#type' => 'radios',
       '#title' => t('Automatic paging method'),
@@ -187,6 +207,7 @@ function paging_settings() {
       '#default_value' => variable_get('paging_automatic_method_' . $type, 0),
       '#attributes' => array('class' => 'paging-method'),
     );
+    // Automatic paging method. Select list to choose the number of characters per page.
     $form[$type]['paging_config']['paging_right']['paging_automatic_chars_' . $type] = array(
       '#type' => 'select',
       '#title' => t('Length of each page'),
@@ -206,7 +227,7 @@ function paging_settings() {
       '#prefix' => '<div class="container-inline paging-chars paging-chars-' . $type . '">',
       '#suffix' => '</div>',
     );
-
+    // Automatic paging method. Select list to choose the number of words per page.
     $form[$type]['paging_config']['paging_right']['paging_automatic_words_' . $type] = array(
       '#type' => 'select',
       '#title' => t('Length of each page'),
@@ -227,11 +248,12 @@ function paging_settings() {
     );
   }
 
+  // Add HTML to setup tabbed interface.
   $form['paging_footer'] = array(
     '#value' => '<div id="paging-vertical-tabs"><ul class="ui-tabs-nav"></ul></div>',
   );
 
-  // Vertical tabs for node types. Degrades in absence of JS.
+  // Vertical tabs for node types. Degrades in absence of JavaScript.
   $module_path = drupal_get_path('module', 'paging');
   drupal_add_js($module_path . '/admin/jquery.cookie.min.js', 'module');
   drupal_add_js($module_path . '/admin/ui.tabs.min.js', 'module');
@@ -245,8 +267,9 @@ function paging_settings() {
  * Implementation of hook_form_alter().
  */
 function paging_form_alter(&$form, $form_state, $form_id) {
-  // If paging is enabled for the node type.
+  // Check if paging is enabled for the node type.
   if (isset($form['type']) && isset($form['#node']) && variable_get('paging_enabled_' . $form['#node']->type, 0)) {
+    // Load the required variables.
     $separator = variable_get('paging_separator_' . $form['#node']->type, '<!--pagesbreak-->');
     $widget = variable_get('paging_separator_widget_' . $form['#node']->type, 0);
     $page_names = variable_get('paging_names_enabled_' . $form['#node']->type, 0);
@@ -276,38 +299,97 @@ function paging_form_alter(&$form, $form_state, $form_id) {
  * Implementation of hook_block().
  */
 function paging_block($op = 'list', $delta = 0, $edit = array()) {
+  // List the block in administration.
   if ($op == 'list') {
     $blocks[0] = array(
       'info' => t('Page Navigation (Paging)'),
       'weight' => 0,
-      'status' => 0,
+      'status' => 0, // Disabled by default.
     );
-
     return $blocks;
   }
+  // View block on node view pages.
   else if ($op == 'view' && $delta == 0 && $GLOBALS['display_paging_block']) {
     $nid = arg(1);
     $block = array(
       'subject' => t('Page navigation'),
-      'content' => paging_render_names($nid),
+      'content' => paging_render_names($nid), // Load a rendered list of page links.
     );
     return $block;
   }
 }
 
-function paging_render_names($nid) {
+/**
+ * Returns a rendered list of page links.
+ *
+ * @param $nid
+ *   Node ID to render page links for.
+ */
+function paging_render_names($nid = NULL) {
   global $pager_page_array;
+  // Load node ID form URL, if none was supplied.
   $nid = $nid ? $nid : arg(1);
+  // Fetch a structured array containing page names.
   $names = paging_fetch_names($nid);
+  // Load the node object to counting total number of expected pages.
   $node = node_load($nid);
+  // Invoke 'load' operation in hook_nodeapi() implementation to calculate the actual number of pages in the node body.
   paging_nodeapi($node, 'load');
-  $names = _paging_populate_empty_names(array_merge(array_fill(0, ($node->page_count - 1), ''), $names), $node->title);
+  // Comparing and mapping the number of pages in $names and $node->page_count.
+  $merged = array_merge(array_fill(0, ($node->page_count - 1), ''), $names);
+  // Fill the empty names with node title and page number.
+  $names = _paging_populate_empty_names($merged, $node->title);
   $rendered_links = array();
+  // Element value to distinguish between multiple pagers on one page.
+  $element = 1;
+  // Convert the names into links.
   foreach ($names as $key => $name) {
-    $page_new = pager_load_array($key, 1, $pager_page_array);
-    $rendered_links[] = theme('pager_link', $name, $page_new, 1);
+    $page_new = pager_load_array($key, $element, $pager_page_array);
+    $rendered_links[] = theme('pager_link', $name, $page_new, $element);
   }
+
   return theme('item_list', $rendered_links);
+}
+
+/**
+ * Helper function to populate empty page names.
+ */
+function _paging_populate_empty_names($names, $title) {
+  foreach ($names as $key => $name) {
+    trim($names[$key]);
+    if (empty($names[$key])) {
+      $names[$key] = t('!title - Page !number', array('!title' => check_plain($title), '!number' => ($key + 1)));;
+    }
+  }
+  return $names;
+}
+
+/**
+ * Return an array of page names for a node.
+ *
+ * @param $node
+ *   Either the nid of the node or the node object itself.
+ *
+ * @return
+ *   An array of page names found in the node body.
+ */
+function paging_fetch_names($node) {
+  if (is_numeric($node)) {
+    $node = node_load($node);
+    // Support for CCK.
+    if (isset($node->field_body[0]['view'])) {
+      $node_body = $node->field_body[0]['view'];
+    }
+    // Support for CCK.
+    elseif (isset($node->field_body[0]['value'])) {
+      $node_body = $node->field_body[0]['value'];
+    }
+    else {
+      $node_body = $node->body;
+    }
+  }
+  preg_match('<!--pagenames:(.*?)-->', $node_body, $matches);
+  return explode('||', $matches[1]);
 }
 
 /**
@@ -352,16 +434,17 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
   switch ($op) {
     case 'load':
       $paging_separator = variable_get('paging_separator_' . $node->type, '<!--pagebreak-->');
+      // Check if manual page separators were used.
       if (strpos($teaser ? $node_teaser : $node_body, $paging_separator) !== FALSE) {
-        // Manual page separators were used.
         $node->pages = explode($paging_separator, $node_body);
         $node->page_count = count($node->pages);
       }
       else {
         $body_parts = $node_body;
+        // Automatic paging based on character count.
         if (variable_get('paging_automatic_method_' . $node->type, 0) == 1 && ($max_chars = variable_get('paging_automatic_chars_' . $node->type, 4000)) != 0) {
-          // Automatic paging based on character count.
           $total_chars = strlen($node_body);
+          // Check if pagination is possible.
           if ($total_chars > $max_chars) {
             $body = $node_body;
             $breaks = (int)($total_chars / $max_chars);
@@ -374,10 +457,11 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             $body_parts = implode($paging_separator, $bodypart);
           }
         }
+        // Automatic paging based on word count.
         elseif (variable_get('paging_automatic_method_' . $node->type, 0) == 2 && ($max_words = variable_get('paging_automatic_words_' . $node->type, 400)) != 0) {
-          // Automatic paging based on word count.
           $words = explode(' ', $node_body);
           $total_words = count($words);
+          // Check if pagination is possible.
           if ($total_words > $max_words) {
             $breaks = (int)($total_words / $max_words);
             for ($i = 1; $i < $breaks; $i++) {
@@ -392,7 +476,9 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       }
       break;
     case 'view':
+      // Fetch a structured array containing page names.
       $node->page_names = paging_fetch_names($node->pages[0]);
+      // Check if node is being viewed as a teaser (and not as a preview).
       if ($teaser && !($node->build_mode == NODE_BUILD_PREVIEW) && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
         // Check to see if the teaser is longer than our first page.
         if ($node->page_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
@@ -421,11 +507,18 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $pager_page_array = explode(',', $page);
           $pager_total[$element] = $node->page_count;
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
+
+          // Put the current page contents into the node body.
           $node->body = check_markup($node->pages[$page], $node->format, false);
 
-          $node->page_names = _paging_populate_empty_names(array_merge(array_fill(0, ($node->page_count - 1), ''), $node->page_names), $node->title);
+          // Mapping the pages in $node->page_names and $node->page_count to set number of pages as the array length.
+          $merged = array_merge(array_fill(0, ($node->page_count - 1), ''), $node->page_names);
+          // Fill the empty names with node title and page number.
+          $node->page_names = _paging_populate_empty_names($merged, $node->title);
 
+          // Find the position to display the page navigation links at.
           $position = variable_get('paging_pager_widget_position_' . $node->type, 'below');
+          // Load the page navigation links into $node->paging. Also accessible in node theming.
           $node->paging = paging_pager_style($element, $node->type, $node->page_names);
           if ($position == 'above' || $position == 'both') {
             $node->body = $node->paging . $node->body;
@@ -434,9 +527,11 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             $node->body .= $node->paging;
           }
 
-          // Set a global value for hook_block() to be able to access.
+          // Set a global value for block visibility.
           $GLOBALS['display_paging_block'] = TRUE;
+
           if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
+            // Set the browser title to page's name.
             drupal_set_title($node->page_names[$page]);
           }
         }
@@ -446,43 +541,13 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
 }
 
 /**
- * Populate empty page names.
+ * Check and return pager navigation in specified format theme.
  */
-function _paging_populate_empty_names($names, $title) {
-  foreach ($names as $key => $name) {
-    trim($names[$key]);
-    if (empty($names[$key])) {
-      $names[$key] = t('!title - Page !number', array('!title' => check_plain($title), '!number' => ($key + 1)));;
-    }
-  }
-  return $names;
-}
-
-function paging_fetch_names($node) {
-  if (is_numeric($node)) {
-    $node = node_load($node);
-    // Support for CCK.
-    if (isset($node->field_body[0]['view'])) {
-      $node = $node->field_body[0]['view'];
-    }
-    // Support for CCK.
-    elseif (isset($node->field_body[0]['value'])) {
-      $node = $node->field_body[0]['value'];
-    }
-    else {
-      $node = $node->body;
-    }
-  }
-  preg_match('<!--pagenames:(.*?)-->', $node, $matches);
-  return explode('||', $matches[1]);
-}
-
 function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NULL) {
-  static $output;
-
   $theme_widget = variable_get('paging_pager_widget_' . $node_type, 'pager');
 
   if ($theme_widget == 'custom') {
+    // Load the custom user function.
     $theme_widget = variable_get('paging_pager_widget_custom_' . $node_type, 'pager');
   }
 
@@ -491,9 +556,10 @@ function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NU
     drupal_add_css(drupal_get_path('module', 'paging') . '/paging.css', 'module');
   }
 
-  // Decode the comma. Ugly.
-  $output = '<div class="links">' . str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters, 9, $page_names)) . '</div>';
-  return $output;
+  // Decode the comma entity.
+  $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters, 9, $page_names));
+
+  return '<div class="links">' . $output . '</div>';
 }
 
 /**
@@ -501,6 +567,8 @@ function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NU
  */
 function paging_link($type, $node = NULL, $teaser = FALSE) {
   $links = array();
+  // Specify a new "Read more" which links to second page of the node if teaser is less than or
+  // equal to the first page contents and if the setting is enabled.
   if ($type == 'node' && $teaser && $node->teaser && $node->pagemore && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
     $links['paging_read_more'] = array(
       'title' => t('Read more'),
@@ -516,6 +584,7 @@ function paging_link($type, $node = NULL, $teaser = FALSE) {
  * Implementation of hook_link_alter().
  */
 function paging_link_alter(&$links, $node) {
+  // Remove the "Read more" link set by node.module.
   if (!empty($node->teaser) && $node->pagemore && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
     unset($links['node_read_more']);
   }
@@ -548,6 +617,7 @@ function paging_filter($in_op, $in_delta = 0, $in_format = -1, $in_text = '') {
  */
 function paging_filter_tips($delta, $format, $long = FALSE) {
   if ($long) {
+    // Display paging help text in filter tips.
     return '<h1>' . t('Paging Help') . '</h1>' . paging_help('admin/help#paging');
   }
   else {

@@ -5,7 +5,9 @@
  * Implementation of hook_uninstall().
  */
 function paging_uninstall() {
+  // Delete all variables starting with "paging" in their name.
   db_query("DELETE FROM {variable} WHERE name LIKE 'paging%'");
+  db_query("DELETE FROM {filters} WHERE module = 'paging'");
 }
 
 /**
@@ -13,12 +15,14 @@ function paging_uninstall() {
  */
 function paging_update_1() {
   $ret = array();
-  module_invoke('node', 'search', 'reset');
-  module_invoke('node', 'update_index');
-  node_update_shutdown();
-  $status = module_invoke('node', 'search', 'status');
-  $percentage = ((int)min(100, 100 * ($status['total'] - $status['remaining']) / max(1, $status['total']))) . '%';
-  $ret[] = array('success' => TRUE, 'query' => t('!percentage of the site has been indexed.', array('!percentage' => $percentage)));
+  if (module_exists('search')) {
+    module_invoke('node', 'search', 'reset');
+    module_invoke('node', 'update_index');
+    node_update_shutdown();
+    $status = module_invoke('node', 'search', 'status');
+    $percentage = ((int)min(100, 100 * ($status['total'] - $status['remaining']) / max(1, $status['total']))) . '%';
+    $ret[] = array('success' => TRUE, 'query' => t('!percentage of the site has been indexed.', array('!percentage' => $percentage)));
+  }
   return $ret;
 }
 
