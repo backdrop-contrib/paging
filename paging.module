@@ -27,6 +27,8 @@ function paging_theme() {
   return array(
     // Secondary Pager Navigation with page names in drop down list.
     'paging_drop_down' => array('tags' => NULL, 'limit' => NULL, 'element' => NULL, 'parameters' => NULL, 'quantity' => NULL),
+    // Helper theme function to generates the select list for drop down pager.
+    'paging_drop_down_option' => array('url_chunk' => NULL, 'page_name' => NULL, 'page_no' => NULL),
   );
 }
 
@@ -719,7 +721,7 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
           $page = $_GET['page'] . ',' . ($i-1);
         }
         $url = $i == 1 ? url($_GET['q']) : url($_GET['q'], array('query' => array('page' => $page)));
-        $options .= '<option value="' . $url . '">' . $page_names[$i-1] . '</option>';
+        $options .= theme('paging_drop_down_option', $url, $page_names[$i-1], $i);
       }
     }
     // End generation.
@@ -769,4 +771,23 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
 
     return $output;
   }
+}
+
+/**
+ * Format an "option" HTML element.
+ *
+ * @param $url_chunk
+ *   Part of the URL with page query.
+ * @param $page_name
+ *   Name of the page.
+ * @param $page_no
+ *   Page number.
+ *
+ * @return
+ *   An HTML string that generates the select list for drop down pager.
+ *
+ * @ingroup themeable
+ */
+function theme_paging_drop_down_option($url_chunk = NULL, $page_name = NULL, $page_no = NULL) {
+  return '<option value="' . $url_chunk . '">' . $page_name . '</option>';
 }
