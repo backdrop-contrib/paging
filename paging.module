@@ -263,18 +263,17 @@ function paging_form_alter(&$form, $form_state, $form_id) {
 function paging_block($op = 'list', $delta = 0, $edit = array()) {
   if ($op == 'list') {
     $blocks[0] = array(
-      'info' => t('Paging Navigation'),
+      'info' => t('Page Navigation (Paging)'),
       'weight' => 0,
-      'status' => 1,
-      'region' => 'left'
+      'status' => 0,
     );
 
     return $blocks;
   }
-  else if ($op == 'view' && $delta == 0 && arg(0) == 'node' && is_numeric(arg(1))) {
+  else if ($op == 'view' && $delta == 0 && $GLOBALS['display_paging_block']) {
     $nid = arg(1);
     $block = array(
-      'subject' => t('Page Navigation'),
+      'subject' => t('Page navigation'),
       'content' => paging_render_names($nid),
     );
     return $block;
@@ -285,8 +284,9 @@ function paging_render_names($nid) {
   global $pager_page_array;
   $nid = $nid ? $nid : arg(1);
   $names = paging_fetch_names($nid);
-  $title = db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $nid));
-  $names = _paging_populate_empty_names($names, $title);
+  $node = node_load($nid);
+  paging_nodeapi($node, 'load');
+  $names = _paging_populate_empty_names(array_merge(array_fill(0, ($node->page_count - 1), ''), $names), $node->title);
   $rendered_links = array();
   foreach ($names as $key => $name) {
     $page_new = pager_load_array($key, 1, $pager_page_array);
@@ -378,17 +378,20 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       break;
     case 'view':
       $node->page_names = paging_fetch_names($node->pages[0]);
-
       if ($teaser && !($node->build_mode == NODE_BUILD_PREVIEW) && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
         // Check to see if the teaser is longer than our first page.
         if ($node->page_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
-          $node->content['body']['#value'] = check_markup($node->pages[0], $node->format, false);
           $node->pagemore = true;
         }
       }
       break;
     case 'alter':
       if (!($node->build_mode == NODE_BUILD_PREVIEW) && strpos($teaser ? $node_teaser : $node_body, '<!--paging_filter-->') !== FALSE) {
+        // Remove internal <!--paging_filter--> tag from final output.
+        $node->teaser = str_replace('<!--paging_filter-->', '', $node_teaser);
+        $node->body = str_replace('<!--paging_filter-->', '', $node->body);
+
+        // Element value to distinguish between multiple pagers on one page.
         $element = 1;
         $page = isset($_GET['page']) ? $_GET['page'] : '';
 
@@ -405,19 +408,14 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
           $node->body = check_markup($node->pages[$page], $node->format, false);
 
-          $node->page_names = _paging_populate_empty_names($node->page_names, $node->title);
+          $node->page_names = _paging_populate_empty_names(array_merge(array_fill(0, ($node->page_count - 1), ''), $node->page_names), $node->title);
 
           $node->body .= paging_pager_style($element, $node->type, $node->page_names);
-          // Remove internal <!--paging_filter--> tag from final output.
-          $node->body = str_replace('<!--paging_filter-->', '', $node->body);
-          
+          // Set a global value for hook_block() to be able to access.
+          $GLOBALS['display_paging_block'] = TRUE;
           if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
             drupal_set_title($node->page_names[$page]);
           }
-        }
-        else if ($teaser) {
-          // Remove internal <!--paging_filter--> tag from final output.
-          $node_teaser = str_replace('<!--paging_filter-->', '', $node_teaser);
         }
       }
       break;
@@ -429,8 +427,9 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
  */
 function _paging_populate_empty_names($names, $title) {
   foreach ($names as $key => $name) {
+    trim($names[$key]);
     if (empty($names[$key])) {
-      $names[$key] = t('!title - Page !number', array('!title' => $title, '!number' => ($key+1)));;
+      $names[$key] = t('!title - Page !number', array('!title' => check_plain($title), '!number' => ($key + 1)));;
     }
   }
   return $names;
