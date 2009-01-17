@@ -116,7 +116,7 @@ Drupal.behaviors.paging = function(context) {
         if (names.length > 0) {
           $(this).val('<!--pagenames:' + names.join('||') + '-->' + this.value);
         }
-      });return false;
+      });
     });
   }
 }
