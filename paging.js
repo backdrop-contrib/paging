@@ -112,8 +112,11 @@ Drupal.behaviors.paging = function(context) {
 
     $('#node-form').submit(function() {
       $('textarea#edit-body').each(function() {
-        $(this).val('<!--pagenames:' + paging_return_names().join('||') + "-->" + this.value);
-      });
+        var names = paging_return_names();
+        if (names.length > 0) {
+          $(this).val('<!--pagenames:' + names.join('||') + '-->' + this.value);
+        }
+      });return false;
     });
   }
 }

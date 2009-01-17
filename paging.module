@@ -153,7 +153,7 @@ function paging_settings() {
     $form[$type]['paging_config']['paging_right']['paging_names_enabled_' . $type] = array(
       '#type' => 'checkbox',
       '#title' => t('Display Page names interface'),
-      '#description' => t('Add an interface to manage page names, which otherwise is a text format within content body, like <em>&lt;!--pagenames:First page||Page no. 2||Chapter 3--&gt;</em>.'),
+      '#description' => t('Add an interface to manage page names, which otherwise is a text format within content body, like <em>&lt;!--pagenames:First page||Page no. 2||Page 3--&gt;</em>. Disabled when an automatic paging method is selected.'),
       '#default_value' => variable_get('paging_names_enabled_' . $type, 0),
       '#attributes' => array('class' => 'paging-names'),
     );
@@ -236,6 +236,7 @@ function paging_form_alter(&$form, $form_state, $form_id) {
     $separator = variable_get('paging_separator_' . $form['#node']->type, '<!--pagesbreak-->');
     $widget = variable_get('paging_separator_widget_' . $form['#node']->type, 0);
     $page_names = variable_get('paging_names_enabled_' . $form['#node']->type, 0);
+    $automatic_paging = variable_get('paging_automatic_method_' . $form['#node']->type, 0);
     $module_path = drupal_get_path('module', 'paging');
 
 	  // Expose configuration variables.
@@ -243,7 +244,7 @@ function paging_form_alter(&$form, $form_state, $form_id) {
       'paging' => array(
         'separator' => $separator,
         'widget' => $widget,
-        'page_names' => $page_names,
+        'page_names' => $page_names && !$automatic_paging, // Disable page names UI when automatic paging is enabled.
         'module_path' => $module_path),
     ), 'setting');
 

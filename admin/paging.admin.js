@@ -41,12 +41,17 @@ function paging_automatic_handler(event) {
   var type = $(this).attr('name').substr(24);
   var checked = $('input[@name=paging_automatic_method_' + type + ']:checked').val();
   $('.paging-chars-' + type + ', .paging-words-' + type).hide();
+  $('input[@name=paging_names_enabled_' + type + ']').removeAttr('disabled');
 
   if (checked == 1) {
     $('.paging-chars-' + type).fadeIn(500);
+    $('input[@name=paging_names_enabled_' + type + ']').removeAttr('checked');
+    $('input[@name=paging_names_enabled_' + type + ']').attr('disabled', 'disabled');
   }
   else if (checked == 2) {
     $('.paging-words-' + type).fadeIn(500);
+    $('input[@name=paging_names_enabled_' + type + ']').removeAttr('checked');
+    $('input[@name=paging_names_enabled_' + type + ']').attr('disabled', 'disabled');
   }
 }
 
