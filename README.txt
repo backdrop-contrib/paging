@@ -22,6 +22,12 @@ _____
 4. Your module is now setup and ready to be used.
 
 
+Limitations
+-----
+
+Paging only works with content types using the core "Body" field.
+
+
 Support
 -----
 
