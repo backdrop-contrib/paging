@@ -22,6 +22,7 @@ img.paging-separator-image {
 #paging-title-navigation {
   margin: 0 auto;
   width: auto;
+  border-collapse: separate;
 }
 
 #paging-title-navigation ul.links li {

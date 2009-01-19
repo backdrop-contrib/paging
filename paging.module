@@ -311,11 +311,10 @@ function paging_block($op = 'list', $delta = 0, $edit = array()) {
     return $blocks;
   }
   // View block on node view pages.
-  else if ($op == 'view' && $delta == 0 && $GLOBALS['display_paging_block']) {
-    $nid = arg(1);
+  else if ($op == 'view' && $delta == 0 && $GLOBALS['_paging_display_block']) {
     $block = array(
       'subject' => t('Page navigation'),
-      'content' => paging_render_names($nid), // Load a rendered list of page links.
+      'content' => paging_render_names(), // Load a rendered list of page links.
     );
     return $block;
   }
@@ -338,7 +337,11 @@ function paging_render_names($nid = NULL) {
   // Invoke 'load' operation in hook_nodeapi() implementation to calculate the actual number of pages in the node body.
   paging_nodeapi($node, 'load');
   // Comparing and mapping the number of pages in $names and $node->page_count.
-  $merged = array_merge(array_fill(0, ($node->page_count - 1), ''), $names);
+  $fake = array_fill(0, ($node->page_count - 1), '');
+  $length = count($fake) > count($names) ? count($fake) : count($names);
+  for ($i=0; $i<$length; ++$i) {
+    $merged[$i] = $names[$i];
+  }
   // Fill the empty names with node title and page number.
   $names = _paging_populate_empty_names($merged, $node->title);
   $rendered_links = array();
@@ -349,7 +352,6 @@ function paging_render_names($nid = NULL) {
     $page_new = pager_load_array($key, $element, $pager_page_array);
     $rendered_links[] = theme('pager_link', $name, $page_new, $element);
   }
-
   return theme('item_list', $rendered_links);
 }
 
@@ -375,9 +377,9 @@ function _paging_populate_empty_names($names, $title) {
  * @return
  *   An array of page names found in the node body.
  */
-function paging_fetch_names($node) {
-  if (is_numeric($node)) {
-    $node = node_load($node);
+function paging_fetch_names($node_body) {
+  if (is_numeric($node_body)) {
+    $node = node_load($node_body);
     // Support for CCK.
     if (isset($node->field_body[0]['view'])) {
       $node_body = $node->field_body[0]['view'];
@@ -423,7 +425,7 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         break;
       case 'prepare':
         // Pass the paging separator string for input format filter tips.
-        $GLOBALS['paging_sep'] = variable_get('paging_separator_' . $node->type, '<!--pagebreak-->');
+        $GLOBALS['_paging_sep'] = variable_get('paging_separator_' . $node->type, '<!--pagebreak-->');
         break;
     }
   }
@@ -514,7 +516,11 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $node->body = check_markup($node->pages[$page], $node->format, false);
 
           // Mapping the pages in $node->page_names and $node->page_count to set number of pages as the array length.
-          $merged = array_merge(array_fill(0, ($node->page_count - 1), ''), $node->page_names);
+          $fake = array_fill(0, ($node->page_count - 1), '');
+          $length = count($fake) > count($node->page_names) ? count($fake) : count($node->page_names);
+          for ($i=0; $i<$length; ++$i) {
+            $merged[$i] = $node->page_names[$i];
+          }
           // Fill the empty names with node title and page number.
           $node->page_names = _paging_populate_empty_names($merged, $node->title);
 
@@ -530,7 +536,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           }
 
           // Set a global value for block visibility.
-          $GLOBALS['display_paging_block'] = TRUE;
+          $GLOBALS['_paging_display_block'] = TRUE;
 
           if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
             // Set the browser title to page's name.
@@ -623,7 +629,7 @@ function paging_filter_tips($delta, $format, $long = FALSE) {
     return '<h1>' . t('Paging Help') . '</h1>' . paging_help('admin/help#paging');
   }
   else {
-    return t('Use %separator to create page breaks.', array('%separator' => $GLOBALS['paging_sep']));
+    return t('Use %separator to create page breaks.', array('%separator' => $GLOBALS['_paging_sep']));
   }
 }
 
@@ -753,7 +759,7 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
       </tbody>
     </table>';
 
-    drupal_add_js("$(document).ready(function() {
+    drupal_add_js("Drupal.theme.prototype.paging_drop_down = function() {
   var vars = [], hash;
 
   var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
@@ -767,6 +773,10 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
   $('.paging-drop-down select').val(location.pathname + '?page=' + vars['page']).bind('change', function() {
     window.location = $(this).val();
   });
+};
+
+$(document).ready(function() {
+  Drupal.theme('paging_drop_down');
 });", 'inline');
 
     return $output;
