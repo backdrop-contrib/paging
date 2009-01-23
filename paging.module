@@ -336,7 +336,7 @@ function paging_render_names($nid = NULL) {
   // Invoke 'load' operation in hook_nodeapi() implementation to calculate the actual number of pages in the node body.
   paging_nodeapi($node, 'load');
   // Comparing and mapping the number of pages in $names and $node->page_count.
-  $fake = array_fill(0, ($node->page_count - 1), '');
+  $fake = array_fill(0, (($node->page_count - 1) < 1 ? 1 : ($node->page_count - 1)), '');
   $length = count($fake) > count($names) ? count($fake) : count($names);
   for ($i=0; $i<$length; ++$i) {
     $merged[$i] = $names[$i];
