@@ -399,7 +399,8 @@ function paging_fetch_names($node_body) {
  * Implementation of hook_nodeapi().
  */
 function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  if (variable_get('paging_enabled_' . $node->type, 0)) {
+  // Act only when paging is enabled for node's type and when node is being rendered for normal views.
+  if (variable_get('paging_enabled_' . $node->type, 0) && ($node->build_mode == NODE_BUILD_NORMAL)) {
     switch ($op) {
       case 'load':
       case 'view':
@@ -482,19 +483,13 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       // Fetch a structured array containing page names.
       $node->page_names = paging_fetch_names($node->pages[0]);
       // Check if node is being viewed as a teaser (and not as a preview).
-      if ($teaser && !($node->build_mode == NODE_BUILD_PREVIEW) && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
+      if ($teaser && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
         // Check to see if the teaser is longer than our first page.
         if ($node->page_count > 1 && strlen($node->teaser) > strlen($node->pages[0])) {
           $node->pagemore = true;
         }
       }
-      break;
-    case 'alter':
-      if (!($node->build_mode == NODE_BUILD_PREVIEW) && strpos($teaser ? $node_teaser : $node_body, '<!--paging_filter-->') !== FALSE) {
-        // Remove internal <!--paging_filter--> tag from final output.
-        $node->teaser = str_replace('<!--paging_filter-->', '', $node_teaser);
-        $node->body = str_replace('<!--paging_filter-->', '', $node->body);
-
+      if (strpos($teaser ? $node_teaser : $node_body, '<!--paging_filter-->') !== FALSE) {
         // Element value to distinguish between multiple pagers on one page.
         $element = 1;
         $page = isset($_GET['page']) ? $_GET['page'] : '';
@@ -505,14 +500,14 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
         // c) if a printable version is not being requested; or
         // d) if a non-paged version is not being explicitly requested
         //    e.g. http://www.example.com/node/1?page=full or node/1/full.
-        if (!$teaser && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full' && arg(0) != 'book' && arg(1) != 'export') {
+        if (!$teaser && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
           global $pager_page_array, $pager_total;
           $pager_page_array = explode(',', $page);
           $pager_total[$element] = $node->page_count;
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
 
           // Put the current page contents into the node body.
-          $node->body = check_markup($node->pages[$page], $node->format, false);
+          $node->content['body']['#value'] = check_markup($node->pages[$page], $node->format, false);
 
           // Mapping the pages in $node->page_names and $node->page_count to set number of pages as the array length.
           $fake = array_fill(0, ($node->page_count - 1), '');
@@ -528,10 +523,12 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           // Load the page navigation links into $node->paging. Also accessible in node theming.
           $node->paging = paging_pager_style($element, $node->type, $node->page_names);
           if ($position == 'above' || $position == 'both') {
-            $node->body = $node->paging . $node->body;
+            $node->content['paging_above']['#value'] = $node->paging;
+            $node->content['paging_above']['#weight'] = $node->content['body']['#weight'] - 1;
           }
           if ($position == 'below' || $position == 'both') {
-            $node->body .= $node->paging;
+            $node->content['paging']['#value'] = $node->paging;
+            $node->content['paging']['#weight'] = $node->content['body']['#weight'] + 1;
           }
 
           // Set a global value for block visibility.
@@ -542,6 +539,8 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             drupal_set_title($node->page_names[$page]);
           }
         }
+        // Remove internal <!--paging_filter--> tag from final output.
+        $node->content['body']['#value'] = str_replace('<!--paging_filter-->', '', $node->content['body']['#value']);
       }
       break;
   }
