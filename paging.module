@@ -175,7 +175,6 @@ function paging_settings() {
         'above' => t('Above content'),
         'both' => t('Below and above content'),
         'manual' => t('None (No output)'),
-
       ),
       '#required' => TRUE,
       '#description' => t('Choose the position of page navigation. If set to %none, <code>@paging</code> can be used to place it at a customizable location.', array('%none' => t('None'), '@paging' => '$node->paging')),
@@ -506,7 +505,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
         // c) if a printable version is not being requested; or
         // d) if a non-paged version is not being explicitly requested
         //    e.g. http://www.example.com/node/1?page=full or node/1/full.
-        if (!$teaser && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
+        if (!$teaser && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full' && arg(0) != 'book' && arg(1) != 'export') {
           global $pager_page_array, $pager_total;
           $pager_page_array = explode(',', $page);
           $pager_total[$element] = $node->page_count;
