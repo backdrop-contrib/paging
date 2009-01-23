@@ -7,6 +7,17 @@ by Gurpartap Singh: Fixed empty names populating method
 by Gurpartap Singh: Fixed page navigation block visibility.
 by Gurpartap Singh: Disable page names UI when automatic paging is enabled.
 by Gurpartap Singh: Remove paging filter settings in hook_uninstall().
+#266373 by sun: Add configurable position for pager above and/or below content or custom pager output in theme.
+by Gurpartap Singh: Added comments to the complete code for better understanding when revisiting.
+by Gurpartap Singh: Added CHANGELOG.txt with complete change log till date.
+by Gurpartap Singh: Added a new theme function to set select list for drop down pager theme function. This provides the ability to override it and set custom URLs(even clean urls).
+by Gurpartap Singh: Added limitations topic to README.txt
+by Gurpartap Singh: Markdown format for README.txt contents.
+by Gurpartap Singh: Created a JavaScript theme function for drop down pager, to allow overriding it's behavior.
+by Gurpartap Singh: Fixed array_fill method.
+#45153 by SiliconMind: Do not paginate book module's print pages.
+by Gurpartap Singh: Fixed error on 'add new comment' page displaying paginated node.
+#346329 by wwalc, Gurpartap Singh: E_NOTICE compatibility.
 
 
 Paging 6.x-1.0-beta2, 2008-11-08

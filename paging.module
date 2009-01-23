@@ -564,7 +564,7 @@ function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NU
   }
 
   // Decode the comma entity.
-  $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, $parameters, 9, $page_names));
+  $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, array(), 9, $page_names));
 
   return '<div class="links">' . $output . '</div>';
 }
@@ -576,7 +576,7 @@ function paging_link($type, $node = NULL, $teaser = FALSE) {
   $links = array();
   // Specify a new "Read more" which links to second page of the node if teaser is less than or
   // equal to the first page contents and if the setting is enabled.
-  if ($type == 'node' && $teaser && $node->teaser && $node->pagemore && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
+  if ($type == 'node' && $teaser && $node->teaser && !empty($node->pagemore) && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
     $links['paging_read_more'] = array(
       'title' => t('Read more'),
       'href' => drupal_get_path_alias("node/$node->nid"),
@@ -592,7 +592,7 @@ function paging_link($type, $node = NULL, $teaser = FALSE) {
  */
 function paging_link_alter(&$links, $node) {
   // Remove the "Read more" link set by node.module.
-  if (!empty($node->teaser) && $node->pagemore && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
+  if (!empty($node->teaser) && !empty($node->pagemore) && variable_get('paging_read_more_enabled_' . $node->type, 0)) {
     unset($links['node_read_more']);
   }
 }
