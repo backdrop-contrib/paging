@@ -336,7 +336,7 @@ function paging_render_names($nid = NULL) {
   // Invoke 'load' operation in hook_nodeapi() implementation to calculate the actual number of pages in the node body.
   paging_nodeapi($node, 'load');
   // Comparing and mapping the number of pages in $names and $node->page_count.
-  $fake = array_fill(0, (($node->page_count - 1) < 1 ? 1 : ($node->page_count - 1)), '');
+  $fake = array_fill(0, (($node->page_count - 1) < 1 ? 1 : ($node->page_count - 1)) + 1, '');
   $length = count($fake) > count($names) ? count($fake) : count($names);
   for ($i=0; $i<$length; ++$i) {
     $merged[$i] = $names[$i];
@@ -510,7 +510,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $node->content['body']['#value'] = check_markup($node->pages[$page], $node->format, false);
 
           // Mapping the pages in $node->page_names and $node->page_count to set number of pages as the array length.
-          $fake = array_fill(0, ($node->page_count - 1), '');
+          $fake = array_fill(0, ($node->page_count - 1) + 1, '');
           $length = count($fake) > count($node->page_names) ? count($fake) : count($node->page_names);
           for ($i=0; $i<$length; ++$i) {
             $merged[$i] = $node->page_names[$i];
@@ -663,96 +663,48 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
   $pager_middle = ceil($quantity / 2);
   // current is the page we are currently paged to
   $pager_current = $pager_page_array[$element] + 1;
-  // first is the first page listed by this pager piece (re quantity)
-  $pager_first = $pager_current - $pager_middle + 1;
   // last is the last page listed by this pager piece (re quantity)
   $pager_last = $pager_current + $quantity - $pager_middle;
   // max is the maximum page number
   $pager_max = $pager_total[$element];
   // End of marker calculations.
 
-  // Prepare for generation loop.
-  $i = $pager_first;
-  if ($pager_last > $pager_max) {
-    // Adjust "center" if at end of query.
-    $i = $i + ($pager_max - $pager_last);
-    $pager_last = $pager_max;
-  }
-  if ($i <= 0) {
-    // Adjust "center" if at start of query.
-    $pager_last = $pager_last + (1 - $i);
-    $i = 1;
-  }
-  // End of generation loop preparation.
+  $prev_name = truncate_utf8(t($page_names[$pager_current - 2]), 50, TRUE, TRUE);
+  $li_previous = theme('pager_previous', (isset($tags[1]) ? $tags[1] : t('Previous page: !prev', array('!prev' => $prev_name))), $limit, $element, 1);
 
-  $li_first = theme('pager_first', (isset($tags[0]) ? $tags[0] : t('« first')), $limit, $element);
-  $li_previous = theme('pager_previous', (isset($tags[1]) ? $tags[1] : t('‹ previous')), $limit, $element, 1);
-  $li_next = theme('pager_next', (isset($tags[3]) ? $tags[3] : t('next ›')), $limit, $element, 1);
-  $li_last = theme('pager_last', (isset($tags[4]) ? $tags[4] : t('last »')), $limit, $element);
+  $next_name = truncate_utf8(t($page_names[$pager_current]), 50, TRUE, TRUE);
+  $li_next = theme('pager_next', (isset($tags[3]) ? $tags[3] : t('Next page: !next', array('!next' => $next_name))), $limit, $element, 1);
 
   if ($pager_total[$element] > 1) {
-    if ($li_first) {
-      $left_items[] = array(
-        'class' => 'pager-first',
-        'data' => $li_first,
-      );
-    }
-    if ($li_previous) {
-      $left_items[] = array(
-        'class' => 'pager-previous',
-        'data' => $li_previous,
-      );
-    }
-
 
     $output .= '<table id="paging-title-navigation">
     <tbody>
       <tr>
-        <td class="previous-pages">';
+        <td class="previous-page" style="width: 50%; text-align: left;">';
 
-    $output .= theme('item_list', $left_items, NULL, 'ul', array('class' => 'links paging-pager-left'));
+    $output .= '<span>' . $li_previous . '</span>';
     $options = '';
 
-    // When there is more than one page, create the pager list.
-    if ($i != $pager_max) {
-      // Now generate the actual pager piece.
-      for (; $i <= $pager_max; $i++) {
-        $page = $_GET['page'] ? $_GET['page'] : '0,' . ($i-1);
-        if (strpos($page, ',') == 1) {
-          $page = $page[0] . ',' . ($i-1);
-        }
-        else if (!empty($_GET['page']) && strpos($page, ',') === FALSE) {
-          $page = $_GET['page'] . ',' . ($i-1);
-        }
-        $url = $i == 1 ? url($_GET['q']) : url($_GET['q'], array('query' => array('page' => $page)));
-        $url = str_replace('%2C', ',', $url);
-        $options .= theme('paging_drop_down_option', $url, $page_names[$i-1], $i, ($i == ($pager_current)));
+    // Now generate the actual pager piece.
+    for ($i = 1; $i <= $pager_max; $i++) {
+      $page = $_GET['page'] ? $_GET['page'] : '0,' . ($i-1);
+      if (strpos($page, ',') == 1) {
+        $page = $page[0] . ',' . ($i-1);
       }
+      else if (!empty($_GET['page']) && strpos($page, ',') === FALSE) {
+        $page = $_GET['page'] . ',' . ($i-1);
+      }
+      $url = $i == 1 ? url($_GET['q']) : url($_GET['q'], array('query' => array('page' => $page)));
+      // Decode the comma entity.
+      $url = str_replace('%2C', ',', $url);
+      $options .= theme('paging_drop_down_option', $url, $page_names[$i-1], $i, ($i == ($pager_current)));
     }
-    // End generation.
 
-    $output .= '</td><td class="paging-drop-down">';
-
+    $output .= '</td><td class="paging-drop-down" style="text-align: center;">';
     $output .= '<select name="paging_drop_down_page">' . $options . '</select>';
-
     $output .= '</td>
-        	<td class="next-pages">';
-
-    if ($li_next) {
-      $right_items[] = array(
-        'class' => 'pager-next',
-        'data' => $li_next,
-      );
-    }
-    if ($li_last) {
-      $right_items[] = array(
-        'class' => 'pager-last',
-        'data' => $li_last,
-      );
-    }
-
-    $output .= theme('item_list', $right_items, NULL, 'ul', array('class' => 'links paging-pager-right'));
-
+        	<td class="next-page" style="width: 50%; text-align: right;">';
+    $output .= '<span>' . $li_next . '</span>';
     $output .= '</td>
         </tr>
       </tbody>
