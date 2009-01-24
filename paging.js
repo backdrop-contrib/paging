@@ -84,7 +84,7 @@ Drupal.behaviors.paging = function(context) {
     }
   });
 
-  var page_names = Drupal.settings.paging.page_names;
+  var page_names = typeof Drupal.settings.paging != 'undefined' ? Drupal.settings.paging.page_names : 0;
   if (page_names == 1) {
   // Page names interface is enabled.
     $('#edit-body-wrapper').after('<div id="paging-names-wrapper"></div>');
@@ -119,4 +119,39 @@ Drupal.behaviors.paging = function(context) {
       });
     });
   }
+
+  $('div.paging-pager-contents:not(.pager-processed)', context).each(function() {
+    var $target = $(this);
+    $target.addClass('pager-processed')
+    // Process pager links.
+    .find('ul.pager > li > a, table.paging-drop-down a')
+    .each(function() {
+      var ajaxPath = $(this).attr('href');
+      $(this).click(function () {
+        $link = $(this);
+        $link.addClass('throbber');
+        $.ajax({
+          url: ajaxPath,
+          type: 'GET',
+          dataType: 'json',
+          data: {'paging_json_request': $target.attr('id')},
+          success: function(response) {
+            $link.removeClass('throbber');
+            if (response.content) {
+              var $newContent = $(response.content);
+              $target.replaceWith($newContent);
+              Drupal.attachBehaviors($newContent.parent());
+              var offset = $newContent.parent().offset().top;
+              $('html,body').animate({scrollTop: offset}, 500);
+            }
+          },
+          error: function() {
+            $link.removeClass('throbber');
+            alert(Drupal.t("An error occurred at @path.", {'@path': ajaxPath}));
+          }
+        });
+        return false;
+      });
+    });
+  });
 };

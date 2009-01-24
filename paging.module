@@ -181,6 +181,14 @@ function paging_settings() {
       '#default_value' => variable_get('paging_pager_widget_position_' . $type, 'below'),
       '#attributes' => array('class' => 'paging-pager'),
     );
+    // Toggle dynamic loading of pages using AJAX.
+    $form[$type]['paging_config']['paging_right']['paging_ajax_enabled_' . $type] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Dynamically load pages using AJAX'),
+      '#description' => t('Clicking on a pager links will load the page content dynamically. Supports both <em>Default</em> and <em>Drop down list</em> pager styles.'),
+      '#default_value' => variable_get('paging_ajax_enabled_' . $type, 0),
+      '#attributes' => array('class' => 'paging-ajax'),
+    );
     // Toggle UI that helps with assigning names to pages. Disabled with automatic paging.
     $form[$type]['paging_config']['paging_right']['paging_names_enabled_' . $type] = array(
       '#type' => 'checkbox',
@@ -518,17 +526,50 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           // Fill the empty names with node title and page number.
           $node->page_names = _paging_populate_empty_names($merged, $node->title);
 
+          // For use in AJAX.
+          $pager_id = 'paging-pager-' . $node->nid;
+
+          $return_json = FALSE;
+          // Capture pager JSON request
+          if (isset($_REQUEST['paging_json_request']) && $_REQUEST['paging_json_request'] == $pager_id) {
+            // Unset before calling a pager theming function to prevent unecessarily cluttered link URLs.
+            unset($_REQUEST['paging_json_request']);
+            $return_json = TRUE;
+          }
+
           // Find the position to display the page navigation links at.
           $position = variable_get('paging_pager_widget_position_' . $node->type, 'below');
           // Load the page navigation links into $node->paging. Also accessible in node theming.
-          $node->paging = paging_pager_style($element, $node->type, $node->page_names);
+          $node->paging = paging_pager_style($node, $node->page_names, $element);
+          
+          // @todo: Either get rid of position option, or find a better way to wrap content in div.
           if ($position == 'above' || $position == 'both') {
-            $node->content['paging_above']['#value'] = $node->paging;
+            $node->content['paging_above']['#value'] = '<div id="' . $pager_id . '" class="paging-pager-contents">' . $node->paging;
             $node->content['paging_above']['#weight'] = $node->content['body']['#weight'] - 1;
+            if ($position != 'below' && $position != 'both') {
+              $node->content['body']['#value'] = $node->content['body']['#value'] . '</div>';
+            }
           }
           if ($position == 'below' || $position == 'both') {
-            $node->content['paging']['#value'] = $node->paging;
+            if ($position != 'above' && $position != 'both') {
+              $node->content['body']['#value'] = '<div id="' . $pager_id . '" class="paging-pager-contents">' . $node->content['body']['#value'];
+            }
+            $node->content['paging']['#value'] = $node->paging . '</div>';
             $node->content['paging']['#weight'] = $node->content['body']['#weight'] + 1;
+          }
+
+          $module_path = drupal_get_path('module', 'paging');
+          drupal_add_css($module_path . '/paging.css', 'module');
+          if (variable_get('paging_ajax_enabled_' . $node->type, 0)) {
+            if ($return_json) {
+              $response = array(
+                'content' => $node->content['paging_above']['#value'] . $node->content['body']['#value'] . $node->content['paging']['#value'],
+              );
+              // Exit with replacement data.
+              exit(drupal_json($response));
+            }
+            // Add scripts for AJAX driven page loading.
+            drupal_add_js($module_path . '/paging.js', 'module');
           }
 
           // Set a global value for block visibility.
@@ -549,12 +590,12 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
 /**
  * Check and return pager navigation in specified format theme.
  */
-function paging_pager_style($element = NULL, $node_type = NULL, $page_names = NULL) {
-  $theme_widget = variable_get('paging_pager_widget_' . $node_type, 'pager');
+function paging_pager_style($node = NULL, $page_names = NULL, $element = NULL) {
+  $theme_widget = variable_get('paging_pager_widget_' . $node->type, 'pager');
 
   if ($theme_widget == 'custom') {
     // Load the custom user function.
-    $theme_widget = variable_get('paging_pager_widget_custom_' . $node_type, 'pager');
+    $theme_widget = variable_get('paging_pager_widget_custom_' . $node->type, 'pager');
   }
 
   if ($theme_widget == 'paging_drop_down') {
@@ -663,8 +704,6 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
   $pager_middle = ceil($quantity / 2);
   // current is the page we are currently paged to
   $pager_current = $pager_page_array[$element] + 1;
-  // last is the last page listed by this pager piece (re quantity)
-  $pager_last = $pager_current + $quantity - $pager_middle;
   // max is the maximum page number
   $pager_max = $pager_total[$element];
   // End of marker calculations.
@@ -677,7 +716,7 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
 
   if ($pager_total[$element] > 1) {
 
-    $output .= '<table id="paging-title-navigation">
+    $output .= '<table id="paging-title-navigation" class="paging-drop-down">
     <tbody>
       <tr>
         <td class="previous-page" style="width: 50%; text-align: left;">';
@@ -701,7 +740,7 @@ function theme_paging_drop_down($tags = array(), $limit = 10, $element = 0, $par
     }
 
     $output .= '</td><td class="paging-drop-down" style="text-align: center;">';
-    $output .= '<select name="paging_drop_down_page">' . $options . '</select>';
+    $output .= '<select name="paging_drop_down_page" onload="Drupal.theme(\'paging_drop_down\');">' . $options . '</select>';
     $output .= '</td>
         	<td class="next-page" style="width: 50%; text-align: right;">';
     $output .= '<span>' . $li_next . '</span>';
