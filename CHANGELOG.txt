@@ -21,6 +21,9 @@ by Gurpartap Singh: Fixed error on 'add new comment' page displaying paginated n
 #363396 by Gurpartap Singh: Paginate only for normal node rendering. Fixed several reported issues where other content fields went missing.
 by Gurpartap Singh: Move setting of default value in drop down pager, from JavaScript to theme function in module. Reduces the code to be loaded client side.
 by Gurpartap Singh: Remove first and last link from drop down pager. Include next and previous page's name along with next and previous links.
+#329923 by Gurpartap Singh: AJAX load the pages. Uses nedjo's code proposed for AJAX pagers in core.
+by Gurpartap Singh: Names can be specified anywhere in the body.
+
 
 Paging 6.x-1.0-beta2, 2008-11-08
 ------------------------------

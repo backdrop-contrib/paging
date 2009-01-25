@@ -378,7 +378,7 @@ function _paging_populate_empty_names($names, $title) {
 /**
  * Return an array of page names for a node.
  *
- * @param $node
+ * @param $node_body
  *   Either the nid of the node or the node object itself.
  *
  * @return
@@ -399,7 +399,7 @@ function paging_fetch_names($node_body) {
       $node_body = $node->body;
     }
   }
-  preg_match('<!--pagenames:(.*?)-->', $node_body, $matches);
+  preg_match("/<!--pagenames:(.*?)-->/", $node_body, $matches);
   return explode('||', $matches[1]);
 }
 
@@ -489,7 +489,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
       break;
     case 'view':
       // Fetch a structured array containing page names.
-      $node->page_names = paging_fetch_names($node->pages[0]);
+      $node->page_names = paging_fetch_names($node->body);
       // Check if node is being viewed as a teaser (and not as a preview).
       if ($teaser && strpos($node_teaser, '<!--paging_filter-->') !== FALSE) {
         // Check to see if the teaser is longer than our first page.
