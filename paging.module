@@ -177,7 +177,8 @@ function paging_settings() {
         'manual' => t('None (No output)'),
       ),
       '#required' => TRUE,
-      '#description' => t('Choose the position of page navigation. If set to %none, <code>@paging</code> can be used to place it at a customizable location.', array('%none' => t('None'), '@paging' => '$node->paging')),
+      '#description' => t('Choose the position of page navigation. If set to %none, <code>@paging</code> can be used to place it at a customizable location.', array('%none' => t('None'), '@paging' => '$node->paging'))
+      . (module_exists('content') ? ' ' . t('Position of enabled pager(s) can further be customized for <a href="@url">content types</a> under <em>Manage fields</em> tab.', array('@url' => url('admin/content/types'))) : ''),
       '#default_value' => variable_get('paging_pager_widget_position_' . $type, 'below'),
       '#attributes' => array('class' => 'paging-pager'),
     );
@@ -515,7 +516,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
           $page = isset($pager_page_array[$element]) ? $pager_page_array[$element] : 0;
 
           // Put the current page contents into the node body.
-          $node->content['body']['#value'] = check_markup($node->pages[$page], $node->format, false);
+          $node->content['body']['#value'] = check_markup($node->pages[$page], $node->format, FALSE);
 
           // Mapping the pages in $node->page_names and $node->page_count to set number of pages as the array length.
           $fake = array_fill(0, ($node->page_count - 1) + 1, '');
@@ -537,33 +538,33 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             $return_json = TRUE;
           }
 
+          // Load the page navigation links into $node->paging. Also accessible in node theming.
+          $node->paging = paging_pager_style($node, $element);
+
           // Find the position to display the page navigation links at.
           $position = variable_get('paging_pager_widget_position_' . $node->type, 'below');
-          // Load the page navigation links into $node->paging. Also accessible in node theming.
-          $node->paging = paging_pager_style($node, $node->page_names, $element);
-          
-          // @todo: Either get rid of position option, or find a better way to wrap content in div.
+
           if ($position == 'above' || $position == 'both') {
-            $node->content['paging_above']['#value'] = '<div id="' . $pager_id . '" class="paging-pager-contents">' . $node->paging;
+            $node->content['paging_above']['#value'] = $node->paging;
             $node->content['paging_above']['#weight'] = $node->content['body']['#weight'] - 1;
-            if ($position != 'below' && $position != 'both') {
-              $node->content['body']['#value'] = $node->content['body']['#value'] . '</div>';
-            }
           }
           if ($position == 'below' || $position == 'both') {
-            if ($position != 'above' && $position != 'both') {
-              $node->content['body']['#value'] = '<div id="' . $pager_id . '" class="paging-pager-contents">' . $node->content['body']['#value'];
-            }
-            $node->content['paging']['#value'] = $node->paging . '</div>';
+            $node->content['paging']['#value'] = $node->paging;
             $node->content['paging']['#weight'] = $node->content['body']['#weight'] + 1;
           }
 
           $module_path = drupal_get_path('module', 'paging');
           drupal_add_css($module_path . '/paging.css', 'module');
           if (variable_get('paging_ajax_enabled_' . $node->type, 0)) {
+            _paging_content_wrap($node);
             if ($return_json) {
+              $content = array(
+                  'paging_above' => $node->content['paging_above'],
+                  'body' => $node->content['body'],
+                  'paging' => $node->content['paging'],
+              );
               $response = array(
-                'content' => $node->content['paging_above']['#value'] . $node->content['body']['#value'] . $node->content['paging']['#value'],
+                'content' => drupal_render($content),
               );
               // Exit with replacement data.
               exit(drupal_json($response));
@@ -588,9 +589,30 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
 }
 
 /**
+ * Wrap the pager(s) and node body in a div for compatibility with AJAX replacement method.
+ */
+function _paging_content_wrap(&$node) {
+  foreach (array('paging_above', 'body', 'paging') as $value) {
+    if (array_key_exists($value, $node->content)) {
+      $x[$value] = $node->content[$value];
+    }
+  }
+  // Sort by #weight.
+  uasort($x, 'element_sort');
+
+  // Opening tag in first item.
+  $start = reset(array_keys($x));
+  $node->content[$start]['#value'] = '<div id="paging-pager-' . $node->nid . '" class="paging-pager-contents">' . $node->content[$start]['#value'];
+
+  // Closing tag in last item.
+  $end = end(array_keys($x));
+  $node->content[$end]['#value'] .= '</div>';
+}
+
+/**
  * Check and return pager navigation in specified format theme.
  */
-function paging_pager_style($node = NULL, $page_names = NULL, $element = NULL) {
+function paging_pager_style($node = NULL, $element = NULL) {
   $theme_widget = variable_get('paging_pager_widget_' . $node->type, 'pager');
 
   if ($theme_widget == 'custom') {
@@ -604,7 +626,7 @@ function paging_pager_style($node = NULL, $page_names = NULL, $element = NULL) {
   }
 
   // Decode the comma entity.
-  $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, array(), 9, $page_names));
+  $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, array(), 9, $node->page_names));
 
   return '<div class="links">' . $output . '</div>';
 }
