@@ -546,11 +546,23 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
 
           if ($position == 'above' || $position == 'both') {
             $node->content['paging_above']['#value'] = $node->paging;
-            $node->content['paging_above']['#weight'] = $node->content['body']['#weight'] - 1;
+            // Get possible manual weight for paging field from CCK setting.
+            if (function_exists('content_extra_field_weight')) {
+              $node->content['paging_above']['#weight'] = content_extra_field_weight($node->type, 'paging_above');
+            }
+            else {
+              $node->content['paging_above']['#weight'] = $node->content['body']['#weight'] - 1;
+            }
           }
           if ($position == 'below' || $position == 'both') {
             $node->content['paging']['#value'] = $node->paging;
-            $node->content['paging']['#weight'] = $node->content['body']['#weight'] + 1;
+            // Get possible manual weight for paging field from CCK setting.
+            if (function_exists('content_extra_field_weight')) {
+              $node->content['paging']['#weight'] = content_extra_field_weight($node->type, 'paging');
+            }
+            else {
+              $node->content['paging']['#weight'] = $node->content['body']['#weight'] + 1;
+            }
           }
 
           $module_path = drupal_get_path('module', 'paging');
@@ -629,6 +641,32 @@ function paging_pager_style($node = NULL, $element = NULL) {
   $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, array(), 9, $node->page_names));
 
   return '<div class="links">' . $output . '</div>';
+}
+
+/**
+ * Implementation of hook_content_extra_fields().
+ *
+ * CCK hook to allow sorting of the pager field.
+ */
+function paging_content_extra_fields($type_name = NULL) {
+  $position = variable_get('paging_pager_widget_position_' . $type_name, 'below');
+  if (!empty($type_name) && variable_get('paging_enabled_' . $type_name, 0) && $position != 'manual') {
+    if ($position == 'above' || $position == 'both') {
+      $fields['paging_above'] = array(
+        'label' => t('Paging (Above)'),
+        'description' => t('Pager navigation display.'),
+        'weight' => -1,
+      );
+    }
+    if ($position == 'below' || $position == 'both') {
+      $fields['paging'] = array(
+        'label' => t('Paging (Below)'),
+        'description' => t('Pager navigation display.'),
+        'weight' => 1,
+      );
+    }
+    return $fields;
+  }
 }
 
 /**
