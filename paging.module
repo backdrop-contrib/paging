@@ -463,7 +463,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             $breaks = (int)($total_chars / $max_chars);
             $bodypart = array();
             for ($i = 0; $i <= $breaks; $i++) {
-              $bodypart[$i] = node_teaser(trim($body), NULL, $max_chars);
+              $bodypart[$i] = node_teaser($body, NULL, $max_chars);
               $bodycount = strlen($bodypart[$i]);
               $body = substr($body, $bodycount);
             }

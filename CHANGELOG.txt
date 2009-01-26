@@ -25,6 +25,7 @@ by Gurpartap Singh: Remove first and last link from drop down pager. Include nex
 by Gurpartap Singh: Names can be specified anywhere in the body.
 by Gurpartap Singh: Better method for wrapping pager and body for AJAX compatibility.
 by Gurpartap Singh: Implement hook_content_extra_fields() to allow customized positioning of pager(s) using "Manage fields" under CCK.
+#362966 by Gurpartap Singh: Fixed automatic paging in middle of tag.
 
 
 Paging 6.x-1.0-beta2, 2008-11-08
