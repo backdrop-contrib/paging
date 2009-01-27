@@ -1,6 +1,6 @@
 // $Id$
 
-Paging 6.x-1.x, xxxx-xx-xx
+Paging 6.x-1.0-beta3, 2008-01-27
 ------------------------------
 #185032 by Gurpartap Singh: Paging block (shows a list of page names as links).
 by Gurpartap Singh: Fixed empty names populating method
