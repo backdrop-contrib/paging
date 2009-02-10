@@ -1,0 +1,482 @@
+# Hungarian translation of paging (6.x-1.0-beta3)
+# Copyright (c) 2009 by the Hungarian translation team
+# Generated from files:
+#  paging.module,v 1.42 2009/01/26 16:31:46 Gurpartap
+#  paging.js,v 1.11 2009/01/24 16:12:52 Gurpartap
+#  paging.info,v 1.3 2008/08/17 18:16:35 Gurpartap
+#  paging.install,v 1.4 2009/01/17 21:23:15 Gurpartap
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: paging (6.x-1.0-beta3)\n"
+"POT-Creation-Date: 2009-02-10 12:16-0600\n"
+"PO-Revision-Date: 2009-02-09 03:05-0600\n"
+"Last-Translator: Balogh Zoltán\n"
+"Language-Team: Hungarian http://forditas.mindworks.hu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: paging.module:118,213
+msgid "Disabled"
+msgstr "Tiltott"
+
+#: paging.module:142
+msgid "Custom"
+msgstr "Egyedi"
+
+#: paging.module:226
+msgid "1000 characters"
+msgstr "1000 karakter"
+
+#: paging.module:227
+msgid "2000 characters"
+msgstr "2000 karakter"
+
+#: paging.module:681
+msgid "Read more"
+msgstr "Tovább"
+
+#: paging.module:180
+msgid "None"
+msgstr "Nincs"
+
+#: paging.js:0
+msgid "An error occurred at @path."
+msgstr "@path helyen hiba fordult elő."
+
+#: paging.module:118
+msgid "Image"
+msgstr "Kép"
+
+#: paging.module:13
+msgid ""
+"Break long pages into smaller ones by means of a page break tag (e.g. "
+"%separator):</p>\n"
+"<pre>First page here.\n"
+"%separator\n"
+"Second page here.\n"
+"%separator\n"
+"More pages here.</pre>"
+msgstr ""
+"Hosszú oldalak kisebbekre tördelése oldal elválasztó "
+"segítségével (pl. %separator):</p>\n"
+"<pre>Itt az első lap.\n"
+"%separator\n"
+"Itt a második lap.\n"
+"%separator\n"
+"A további lapok.</pre>"
+
+#: paging.module:18
+msgid ""
+"Automatic page breaking based on character or word count is also "
+"supported."
+msgstr ""
+"Támogatott a karakterek illetve a szavak száma alapján történő "
+"automatikus oldaltörés is."
+
+#: paging.module:42,706; paging.info:0
+msgid "Paging"
+msgstr "Lapozás"
+
+#: paging.module:75
+msgid "Paging filter has not yet been enabled for any input formats. !link!"
+msgstr ""
+"A lapozó szűrő nincs engedélyezve egyetlen beviteli formához sem. "
+"!link!"
+
+#: paging.module:75
+msgid "Take action"
+msgstr "Beállítás most"
+
+#: paging.module:106
+msgid "Page separator string"
+msgstr "Oldalelválasztó karaktersorozat"
+
+#: paging.module:111
+msgid ""
+"Use an HTML tag that will render reasonably when paging is not "
+"enabled, such as %pagebreak or %hr."
+msgstr ""
+"Olyan HTML jelölőt kell használni, amely akkor is érthetően "
+"jelenik meg, ha a lapozás nem engedélyezett, mint például a "
+"%pagebreak vagy a %hr."
+
+#: paging.module:117
+msgid "Paging separator widget"
+msgstr "Oldalelválasztó felületi elem"
+
+#: paging.module:118
+msgid "Button"
+msgstr "Nyomógomb"
+
+#: paging.module:121
+msgid ""
+"Choose the style of separator string widget. This widget attaches "
+"itself to the body textarea and when clicked, inserts separator at "
+"cursor position."
+msgstr ""
+"Felületi elem kiválasztása az elválasztó karaktersorozat "
+"beviteléhez. Az elem csatlakozik a törzs szövegdobozához, és ha "
+"rákattintanak, beilleszti az elválasztót a kurzor pozícióhoz."
+
+#: paging.module:136
+msgid "Pager style"
+msgstr "Lapozó stílusa"
+
+#: paging.module:138
+msgid "Default <small>- <code>!pager</code></small>"
+msgstr "Alapértelmezett <small>- <code>!pager</code></small>"
+
+#: paging.module:141
+msgid "Drop down list <small>- <code>theme_paging_drop_down()</code></small>"
+msgstr ""
+"Legördülő lista <small>- "
+"<code>theme_paging_drop_down()</code></small>"
+
+#: paging.module:145
+msgid "Choose style of page navigation. See also: !link."
+msgstr ""
+"A lapok navigációs stílusának kiválasztása. További "
+"információk: !link."
+
+#: paging.module:152
+msgid "Custom pager theme function"
+msgstr "A lapozó egyedi sminkfüggvénye"
+
+#: paging.module:157
+msgid ""
+"Enter the part after the prefix <em>theme_</em> of your custom theme "
+"function."
+msgstr "Az egyedi sminkfüggvény <em>theme_</em> előtag utáni része."
+
+#: paging.module:128
+msgid "Link \"Read more\" to second page"
+msgstr "A „Tovább” a második oldalra hivatkozzon"
+
+#: paging.module:129
+msgid ""
+"When enabled, the \"Read more\" link under teasers will link to the "
+"second page of the content, iff the teaser is larger than the first "
+"page or if they are the same."
+msgstr ""
+"Ha ez engedélyezett, valamint az előnézet nagyobb, vagy megegyezik "
+"az első oldallal, akkor a „Tovább” hivatkozás a tartalom "
+"második oldalára vezet."
+
+#: paging.module:212
+msgid "Automatic paging method"
+msgstr "Automatikus lapozási mód"
+
+#: paging.module:213
+msgid "Limit by characters <small>(recommended)</small>"
+msgstr "Behatárolás karakterekkel <small>(ajánlott)</small>"
+
+#: paging.module:213
+msgid "Limit by words"
+msgstr "Behatárolás szavakkal"
+
+#: paging.module:216
+msgid ""
+"Choose the method for automatic paging. Automatic paging is ignored "
+"where paging separator string is used."
+msgstr ""
+"Az automatikus lapozás módjának kiválasztása. Ahol a "
+"lapelválasztó karaktersorozat használva van, ott figyelmen kívül "
+"marad."
+
+#: paging.module:223,243
+msgid "Length of each page"
+msgstr "Egy oldal hossza"
+
+#: paging.module:225
+msgid "500 characters"
+msgstr "500 karakter"
+
+#: paging.module:225
+msgid "750 characters"
+msgstr "750 karakter"
+
+#: paging.module:226
+msgid "1500 characters"
+msgstr "1500 karakter"
+
+#: paging.module:227
+msgid "2500 characters"
+msgstr "2500 karakter"
+
+#: paging.module:228
+msgid "3000 characters"
+msgstr "3000 karakter"
+
+#: paging.module:228
+msgid "3500 characters"
+msgstr "3500 karakter"
+
+#: paging.module:229
+msgid "4000 characters"
+msgstr "4000 karakter"
+
+#: paging.module:229
+msgid "4500 characters"
+msgstr "4500 karakter"
+
+#: paging.module:230
+msgid "5000 characters"
+msgstr "5000 karakter"
+
+#: paging.module:230
+msgid "5500 characters"
+msgstr "5500 karakter"
+
+#: paging.module:231
+msgid "6000 characters"
+msgstr "6000 karakter"
+
+#: paging.module:231
+msgid "6500 characters"
+msgstr "6500 karakter"
+
+#: paging.module:232
+msgid "7000 characters"
+msgstr "7000 karakter"
+
+#: paging.module:232
+msgid "7500 characters"
+msgstr "7500 karakter"
+
+#: paging.module:235
+msgid "Select the number of characters to display per page."
+msgstr "Egy oldalon megjelenő karakterek számának meghatározása."
+
+#: paging.module:245
+msgid "100 words"
+msgstr "100 szó"
+
+#: paging.module:245
+msgid "150 words"
+msgstr "150 szó"
+
+#: paging.module:246
+msgid "200 words"
+msgstr "200 szó"
+
+#: paging.module:246
+msgid "250 words"
+msgstr "250 szó"
+
+#: paging.module:247
+msgid "300 words"
+msgstr "300 szó"
+
+#: paging.module:247
+msgid "350 words"
+msgstr "350 szó"
+
+#: paging.module:248
+msgid "400 words"
+msgstr "400 szó"
+
+#: paging.module:248
+msgid "450 words"
+msgstr "450 szó"
+
+#: paging.module:249
+msgid "500 words"
+msgstr "500 szó"
+
+#: paging.module:249
+msgid "550 words"
+msgstr "550 szó"
+
+#: paging.module:250
+msgid "600 words"
+msgstr "600 szó"
+
+#: paging.module:250
+msgid "650 words"
+msgstr "650 szó"
+
+#: paging.module:251
+msgid "700 words"
+msgstr "700 szó"
+
+#: paging.module:251
+msgid "750 words"
+msgstr "750 szó"
+
+#: paging.module:254
+msgid "Select the number of words to display per page."
+msgstr "Egy oldalon megjelenő szavak számának meghatározása."
+
+#: paging.module:373; paging.js:0
+msgid "!title - Page !number"
+msgstr "!title - Oldal !number"
+
+#: paging.module:683
+msgid "Read the rest of this posting."
+msgstr "A tartalom további részének elolvasása"
+
+#: paging.module:709
+msgid ""
+"Allows content to be broken up into pages, using a separator tag (e.g. "
+"%separator), configurable on <a href=\"!url\">paging settings "
+"page</a>."
+msgstr ""
+"Lehetővé teszi a tartalom oldalakra tördelését egy elválasztó "
+"használatával (pl. %separator). Beállítható a <a "
+"href=\"!url\">lapozó beállításai oldalon</a>."
+
+#: paging.module:728
+msgid "Paging Help"
+msgstr "Lapozás-súgó"
+
+#: paging.module:731
+msgid "Use %separator to create page breaks."
+msgstr "%separator használható az oldaltörésekhez."
+
+#: paging.module:0
+msgid "paging"
+msgstr "paging"
+
+#: paging.install:24
+msgid "!percentage of the site has been indexed."
+msgstr "A honlap !percentage indexelve."
+
+#: paging.info:0
+msgid "Allows users to use a tag to break up a node into multiple pages."
+msgstr ""
+"Egy jelölő segítségével lehetővé teszi a tartalom oldalakra "
+"tördelését."
+
+#: paging.js:0
+msgid "Insert page separator"
+msgstr "Oldalelválasztó beillesztése"
+
+#: paging.js:0
+msgid "Name of !number page: "
+msgstr "!number. oldal neve: "
+
+#: paging.js:0
+msgid "Page names"
+msgstr "Oldalnevek"
+
+#: paging.module:196
+msgid "Display Page names interface"
+msgstr "Oldalnevek kezelőfelületének megjelenítése"
+
+#: paging.module:204
+msgid "Change page title to name of current page"
+msgstr "A lap címének megváltoztatása az aktuális lap nevére"
+
+#: paging.module:205
+msgid ""
+"Change the node's and browser window's title into name of the current "
+"page."
+msgstr ""
+"Megváltoztatja a tartalom és a böngésző ablak címét az "
+"aktuális oldal nevére."
+
+#: paging.module:43
+msgid ""
+"Enable or disable paging, configure separator string, toggle automatic "
+"paging and more for each content types."
+msgstr ""
+"Engedélyezi, vagy tiltja a lapozást, beállítja a határoló "
+"karaktersorozatot, kapcsolja az automatikus lapozást és egyebeket "
+"minden tartalom típusra."
+
+#: paging.module:172
+msgid "Pager position"
+msgstr "Lapozó elhelyezkedése"
+
+#: paging.module:174
+msgid "Below content"
+msgstr "A tartalom alatt"
+
+#: paging.module:175
+msgid "Above content"
+msgstr "A tartalom felett"
+
+#: paging.module:176
+msgid "Below and above content"
+msgstr "A tartalom alatt és felett"
+
+#: paging.module:177
+msgid "None (No output)"
+msgstr "Nincs (nincs kimenet)"
+
+#: paging.module:180
+msgid ""
+"Choose the position of page navigation. If set to %none, "
+"<code>@paging</code> can be used to place it at a customizable "
+"location."
+msgstr ""
+"A lapnavigáció helyzetének kiválasztása. Ha értéke %none, akkor "
+"<code>@paging</code> használható hogy elhelyezze egyedileg "
+"beállítható helyre."
+
+#: paging.module:181
+msgid ""
+"Position of enabled pager(s) can further be customized for <a "
+"href=\"@url\">content types</a> under <em>Manage fields</em> tab."
+msgstr ""
+"Az engedélyezett lapozók helyzetét testre lehet szabni a <a "
+"href=\"@url\">tartalom típusok</a> oldalon lévő <em>Mezők "
+"kezelése</em> fülön."
+
+#: paging.module:188
+msgid "Dynamically load pages using AJAX"
+msgstr "AJAX használatával dinamikusan tölti az oldalakat"
+
+#: paging.module:189
+msgid ""
+"Clicking on a pager links will load the page content dynamically. "
+"Supports both <em>Default</em> and <em>Drop down list</em> pager "
+"styles."
+msgstr ""
+"A lapozó hivatkozásaira kattintva az oldal tartalma dinamikusan fog "
+"betöltődni. Mindkét lapozó stílus (<em>Alapértelmezett</em> és "
+"<em>Legördülő lista</em>) támogatott."
+
+#: paging.module:197
+msgid ""
+"Add an interface to manage page names, which otherwise is a text "
+"format within content body, like <em>&lt;!--pagenames:First page||Page "
+"no. 2||Page 3--&gt;</em>. Disabled when an automatic paging method is "
+"selected."
+msgstr ""
+"A lapok neveinek kezeléséhez ad egy felületet, melyek egyébként "
+"szöveges formátumban vannak a  tartalom törzsében, mint "
+"<em>&lt;!--pagenames:Első oldal||Lapszám 2||Fejezet 3--&gt;</em>. "
+"Tiltott, ha egy automatikus lapozási mód van kiválasztva."
+
+#: paging.module:315
+msgid "Page Navigation (Paging)"
+msgstr "Lap navigáció (lapozás)"
+
+#: paging.module:324
+msgid "Page navigation"
+msgstr "Lap navigáció"
+
+#: paging.module:656
+msgid "Paging (Above)"
+msgstr "Lapozás (felette)"
+
+#: paging.module:657,664
+msgid "Pager navigation display."
+msgstr "Lapozó navigáció megjelenítése."
+
+#: paging.module:663
+msgid "Paging (Below)"
+msgstr "Lapozás (alatta)"
+
+#: paging.module:772
+msgid "Previous page: !prev"
+msgstr "Előző oldal: !prev"
+
+#: paging.module:775
+msgid "Next page: !next"
+msgstr "Következő oldal: !next"
+
