@@ -33,31 +33,31 @@ $(document).ready(function(){
   // Set the height of the container to a fixed size.
   $('#paging-vertical-tabs').height(maxHeight);
 
-  $(".paging-method input[@type=radio]").bind("change", paging_automatic_handler).each(paging_automatic_handler);
-  $(".paging-pager input[@type=radio]").bind("change", paging_pager_handler).each(paging_pager_handler);
+  $(".paging-method input[type=radio]").bind("change", paging_automatic_handler).each(paging_automatic_handler);
+  $(".paging-pager input[type=radio]").bind("change", paging_pager_handler).each(paging_pager_handler);
 });
 
 function paging_automatic_handler(event) {
   var type = $(this).attr('name').substr(24);
-  var checked = $('input[@name=paging_automatic_method_' + type + ']:checked').val();
+  var checked = $('input[name=paging_automatic_method_' + type + ']:checked').val();
   $('.paging-chars-' + type + ', .paging-words-' + type).hide();
-  $('input[@name=paging_names_enabled_' + type + ']').removeAttr('disabled');
+  $('input[name=paging_names_enabled_' + type + ']').removeAttr('disabled');
 
   if (checked == 1) {
     $('.paging-chars-' + type).fadeIn(500);
-    $('input[@name=paging_names_enabled_' + type + ']').removeAttr('checked');
-    $('input[@name=paging_names_enabled_' + type + ']').attr('disabled', 'disabled');
+    $('input[name=paging_names_enabled_' + type + ']').removeAttr('checked');
+    $('input[name=paging_names_enabled_' + type + ']').attr('disabled', 'disabled');
   }
   else if (checked == 2) {
     $('.paging-words-' + type).fadeIn(500);
-    $('input[@name=paging_names_enabled_' + type + ']').removeAttr('checked');
-    $('input[@name=paging_names_enabled_' + type + ']').attr('disabled', 'disabled');
+    $('input[name=paging_names_enabled_' + type + ']').removeAttr('checked');
+    $('input[name=paging_names_enabled_' + type + ']').attr('disabled', 'disabled');
   }
 }
 
 function paging_pager_handler(event) {
   var type = $(this).attr('name').substr(20);
-  var checked = $('input[@name=paging_pager_widget_' + type + ']:checked').val();
+  var checked = $('input[name=paging_pager_widget_' + type + ']:checked').val();
   $('.paging-pager-custom-' + type).parent().hide();
 
   if (checked == 'custom') {

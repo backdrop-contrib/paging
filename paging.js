@@ -33,7 +33,7 @@ function paging_handle_names(pages) {
 function paging_return_names() {
   var names = [];
   var i = 0;
-  $('#paging-page-names').find('input[@type=text]').each(function() {
+  $('#paging-page-names').find('input[type=text]').each(function() {
     names[i] = $(this).val();
     i++;
   }).parents('fieldset').remove();

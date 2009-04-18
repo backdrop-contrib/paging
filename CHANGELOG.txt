@@ -3,6 +3,7 @@ $Id$
 Paging 6.x-1.0, 2009-xx-xx
 ------------------------------
 by Gurpartap Singh: UX: Displays a successful enabling message along with link to settings page, upon enabling the module.
+#434652 by jcmarco: Remove @ from selectors.
 
 Paging 6.x-1.0-beta3, 2009-01-27
 ------------------------------
