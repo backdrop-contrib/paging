@@ -1,6 +1,10 @@
-// $Id$
+$Id$
 
-Paging 6.x-1.0-beta3, 2008-01-27
+Paging 6.x-1.0, 2009-xx-xx
+------------------------------
+by Gurpartap Singh: UX: Displays a successful enabling message along with link to settings page, upon enabling the module.
+
+Paging 6.x-1.0-beta3, 2009-01-27
 ------------------------------
 #185032 by Gurpartap Singh: Paging block (shows a list of page names as links).
 by Gurpartap Singh: Fixed empty names populating method
