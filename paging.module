@@ -502,6 +502,8 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
         // Element value to distinguish between multiple pagers on one page.
         $element = 1;
         $page = isset($_GET['page']) ? $_GET['page'] : '';
+        $page_elements = explode(',', $page);
+        $node->page_current = $page_elements[1];
 
         // Only do paging
         // a) if not in teaser mode;
