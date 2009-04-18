@@ -463,7 +463,7 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             $breaks = (int)($total_chars / $max_chars);
             $bodypart = array();
             for ($i = 0; $i <= $breaks; $i++) {
-              $bodypart[$i] = node_teaser($body, NULL, $max_chars);
+              $bodypart[$i] = _paging_body_shift($body, $max_chars);
               $bodycount = strlen($bodypart[$i]);
               $body = substr($body, $bodycount);
             }
@@ -641,6 +641,74 @@ function paging_pager_style($node = NULL, $element = NULL) {
   $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, array(), 9, $node->page_names));
 
   return '<div class="links">' . $output . '</div>';
+}
+
+/**
+ * Helper function for automatic page separation by character limit.
+ */
+function _paging_body_shift($body, $size) {
+  // If we have a short body, the entire body is the teaser.
+  if (drupal_strlen($body) <= $size) {
+    return $body;
+  }
+
+  // If the delimiter has not been specified, try to split at paragraph or
+  // sentence boundaries.
+
+  // The teaser may not be longer than maximum length specified. Initial slice.
+  $teaser = truncate_utf8($body, $size);
+
+  // Store the actual length of the UTF8 string -- which might not be the same
+  // as $size.
+  $max_rpos = strlen($teaser);
+
+  // How much to cut off the end of the teaser so that it doesn't end in the
+  // middle of a paragraph, sentence, or word.
+  // Initialize it to maximum in order to find the minimum.
+  $min_rpos = $max_rpos;
+
+  // Store the reverse of the teaser.  We use strpos on the reversed needle and
+  // haystack for speed and convenience.
+  $reversed = strrev($teaser);
+
+  // Build an array of arrays of break points grouped by preference.
+  $break_points = array();
+
+  // A paragraph near the end of sliced teaser is most preferable.
+  $break_points[] = array('</p>' => 0);
+
+  // If no complete paragraph then treat line breaks as paragraphs.
+  $line_breaks = array('<br />' => 6, '<br>' => 4);
+  // Newline only indicates a line break if line break converter
+  // filter is present.
+  if (isset($filters['filter/1'])) {
+    $line_breaks["\n"] = 1;
+  }
+  $break_points[] = $line_breaks;
+
+  // If the first paragraph is too long, split at the end of a sentence.
+  $break_points[] = array('. ' => 1, '! ' => 1, '? ' => 1, '。' => 0, '؟ ' => 1);
+
+  // Iterate over the groups of break points until a break point is found.
+  foreach ($break_points as $points) {
+    // Look for each break point, starting at the end of the teaser.
+    foreach ($points as $point => $offset) {
+      // The teaser is already reversed, but the break point isn't.
+      $rpos = strpos($reversed, strrev($point));
+      if ($rpos !== FALSE) {
+        $min_rpos = min($rpos + $offset, $min_rpos);
+      }
+    }
+
+    // If a break point was found in this group, slice and return the teaser.
+    if ($min_rpos !== $max_rpos) {
+      // Don't slice with length 0.  Length must be <0 to slice from RHS.
+      return ($min_rpos === 0) ? $teaser : substr($teaser, 0, 0 - $min_rpos);
+    }
+  }
+
+  // If a break point was not found, still return a teaser.
+  return $teaser;
 }
 
 /**
