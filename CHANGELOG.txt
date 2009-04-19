@@ -6,6 +6,7 @@ by Gurpartap Singh: UX: Displays a successful enabling message along with link t
 #434652 by jcmarco: Remove @ from selectors.
 #366862 by smacphail & Gurpartap Singh: node_teaser() isn't suitable when teaser break tag is present.
 #383670 by Gurpartap Singh: Expose a "current page" variable for themes.
+#438002 by Gurpartap Singh & RTH: Missing argument error on filter tips page.
 
 Paging 6.x-1.0-beta3, 2009-01-27
 ------------------------------

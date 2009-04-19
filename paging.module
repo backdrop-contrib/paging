@@ -795,7 +795,7 @@ function paging_filter($in_op, $in_delta = 0, $in_format = -1, $in_text = '') {
 function paging_filter_tips($delta, $format, $long = FALSE) {
   if ($long) {
     // Display paging help text in filter tips.
-    return '<h1>' . t('Paging Help') . '</h1>' . paging_help('admin/help#paging');
+    return '<h1>' . t('Paging Help') . '</h1>' . paging_help('admin/help#paging', array());
   }
   else {
     return t('Use %separator to create page breaks.', array('%separator' => $GLOBALS['_paging_sep']));
