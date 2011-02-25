@@ -1,4 +1,3 @@
-// $Id$
 
 /**
  * Vertical tabs node form layout (aka drawers).

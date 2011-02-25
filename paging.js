@@ -1,4 +1,3 @@
-// $Id$
 
 Number.prototype.ordinal = function () {
   return this + (
