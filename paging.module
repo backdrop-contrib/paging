@@ -912,3 +912,13 @@ $(document).ready(function() {
 function theme_paging_drop_down_option($url_chunk = NULL, $page_name = NULL, $page_no = NULL, $selected = NULL) {
   return '<option' . ($selected ? ' selected=""' : '') . ' value="' . $url_chunk . '">' . $page_name . '</option>';
 }
+
+/**
+ * Implementation of hook_wysiwyg_include_directory().
+ */
+function paging_wysiwyg_include_directory($type) {
+  switch ($type) {
+    case 'plugins':
+      return 'wysiwyg';
+  }
+}
