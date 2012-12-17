@@ -6,7 +6,7 @@
 /**
  * Implementation of hook_help().
  */
-function paging_help($path, $arg) {
+function paging_help($path, $arg = 'none') {
   switch ($path) {
     case 'admin/help#paging':
       return '<p>' . t('Break long pages into smaller ones by means of a page break tag (e.g. %separator):</p>
