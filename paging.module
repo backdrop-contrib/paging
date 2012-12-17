@@ -437,6 +437,10 @@ function paging_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         break;
     }
   }
+  elseif ( in_array($op, array('load','view','alter')) && strpos($teaser ? $node->teaser : $node->body, '<!--paging_filter-->') !== FALSE) {
+    // Remove internal tag: <!--paging_filter-->, added in the input filter
+    $node->content['body']['#value'] = str_replace('<!--paging_filter-->', '', $node->content['body']['#value']);    
+  }
 }
 
 /**
