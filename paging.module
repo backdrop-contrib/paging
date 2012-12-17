@@ -466,10 +466,12 @@ function _paging_nodeapi(&$node, &$node_body, &$node_teaser, $op, $teaser, $page
             $body = $node_body;
             $breaks = (int)($total_chars / $max_chars);
             $bodypart = array();
-            for ($i = 0; $i <= $breaks; $i++) {
+            $i = 0;
+            while ($body) {
               $bodypart[$i] = _paging_body_shift($body, $max_chars);
               $bodycount = strlen($bodypart[$i]);
               $body = substr($body, $bodycount);
+              $i++;
             }
             $body_parts = implode($paging_separator, $bodypart);
           }
