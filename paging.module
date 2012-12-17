@@ -28,6 +28,7 @@ function paging_theme() {
     'paging_drop_down' => array('tags' => NULL, 'limit' => NULL, 'element' => NULL, 'parameters' => NULL, 'quantity' => NULL),
     // Helper theme function to generates the select list for drop down pager.
     'paging_drop_down_option' => array('url_chunk' => NULL, 'page_name' => NULL, 'page_no' => NULL, 'selected' => NULL),
+    'pager_wrapper' => array('output' => NULL),
   );
 }
 
@@ -645,7 +646,7 @@ function paging_pager_style($node = NULL, $element = NULL) {
   // Decode the comma entity.
   $output = str_replace('%2C', ',', theme($theme_widget, NULL, 1, $element, array(), 9, $node->page_names));
 
-  return '<div class="links">' . $output . '</div>';
+  return theme('pager_wrapper', $output);
 }
 
 /**
@@ -925,4 +926,17 @@ function paging_wysiwyg_include_directory($type) {
     case 'plugins':
       return 'wysiwyg';
   }
+}
+
+/**
+ * Format the wrapper around pager links.
+ *
+ * @param $output
+ *   The themed pager links
+ *
+ * @return
+ *   An HTML string.
+ */
+function theme_pager_wrapper($output){
+  return '<div class="links">' . $output . '</div>';
 }
