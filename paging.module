@@ -95,8 +95,12 @@ function paging_node_load($nodes, $types) {
   foreach ($nodes as $node) {
     // Get the field to use as the body.
     $body = paging_fetch_body($node);
-    // Load the separator for this node type.
-    $paging_separator = variable_get('paging_separator', '<!--pagebreak-->');
+    // Load the separator for the content type (backwards compatability w 1.0)
+    $paging_separator = variable_get('paging_separator_' . $node->type, FALSE);
+    // Load the global separator.
+    if (!$paging_separator) {
+      $paging_separator = variable_get('paging_separator', '<!--pagebreak-->');
+    }
 
     // Check if manual page separators were used.
     if (strpos($body, $paging_separator) !== FALSE) {
@@ -148,7 +152,7 @@ function paging_node_load($nodes, $types) {
  */
 function paging_node_view($node, $view_mode, $langcode) {
   // If paging is enabled for this node type.
-  if (variable_get('paging_enabled_' . $node->type, 0) == TRUE) {
+  if (variable_get('paging_enabled_' . $node->type, 0) == TRUE && property_exists($node, 'page_count')) {
     // Get the paging field name.
     $field = variable_get('paging_field_' . $node->type, 0);
     // Get the field to use as the body.
