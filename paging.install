@@ -4,7 +4,7 @@
  * Implementation of hook_enable().
  */
 function paging_enable() {
-	drupal_set_message(t('Paging has been installed enabled. [<a href="@url">Goto configuration</a>]', array('@url' => url('admin/settings/paging'))));
+  drupal_set_message(t('Paging has been installed enabled. [<a href="@url">Goto configuration</a>]', array('@url' => url('admin/settings/paging'))));
 }
 
 /**
@@ -92,3 +92,8 @@ function paging_update_6000() {
 
   return $ret;
 }
+
+/**
+ * Drupal 6 -> Drupal 7 upgrade path.
+ */
+// @todo

@@ -1,4 +1,4 @@
-// $Id$
+// English translation for TinyMCE
 
 tinyMCE.addToLang('pagebreak', {
   title: 'Insert page break',

@@ -1,5 +1,3 @@
-// $Id$
-
 Drupal.wysiwyg.plugins.paging_pagebreak = {
 
   /**
