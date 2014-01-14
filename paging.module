@@ -257,7 +257,7 @@ function paging_field_extra_fields() {
 function paging_wysiwyg_include_directory($type) {
   switch ($type) {
     case 'plugins':
-      return $type;
+      return 'wysiwyg';
   }
 }
 
