@@ -19,8 +19,8 @@ function paging_help($path, $arg) {
     case 'admin/help#paging':
       return '<p>' . t('Break long pages into smaller ones by means of a page break tag (e.g. %separator):</p>
 <pre>First page here.
-%separator 
-Second page here. 
+%separator
+Second page here.
 %separator
 More pages here.</pre>', array('%separator' => variable_get('paging_separator', '<!--pagebreak-->'))) . '<p>' . t('Automatic page breaking based on character or word count is also supported.') . '</p>';
   }
@@ -49,9 +49,9 @@ function paging_menu() {
  */
 function paging_filter_info() {
   $filters['paging'] = array(
-    'title' => t('Break content into multiple pages.'), 
+    'title' => t('Break content into multiple pages.'),
     'description' => t('Allows content to be broken into multiple pages, using a separator tag (e.g. %separator), configurable on the <a href="!url">paging settings page</a>.', array('%separator' => variable_get('paging_separator', '<!--pagebreak-->'), '!url' => url('admin/config/content/paging'))),
-    'process callback' => 'paging_filter_paging_process', 
+    'process callback' => 'paging_filter_paging_process',
     'tips callback' => 'paging_filter_paging_tips',
   );
 
@@ -111,32 +111,59 @@ function paging_node_load($nodes, $types) {
       $body_parts = $body;
 
       // Automatic paging based on character count.
-      if (variable_get('paging_automatic_method_' . $node->type, 0) == 1 && ($max_chars = variable_get('paging_automatic_chars_' . $node->type, 4000)) != 0) {
-        $total_chars = strlen($body);
+      if (variable_get('paging_automatic_method_' . $node->type, 0) == 'chars'
+        && ($max_chars = variable_get('paging_automatic_chars_' . $node->type, 4000)) != 0) {
+        $orphan_size = variable_get('paging_automatic_chars_orphan_' . $type, 100);
+        $total_chars = drupal_strlen($body);
         // Check if pagination is possible.
         if ($total_chars > $max_chars) {
           $body = $body;
           $breaks = (int)($total_chars / $max_chars);
           $bodypart = array();
           for ($i = 0; $i <= $breaks; $i++) {
-            $bodypart[$i] = node_teaser($body, NULL, $max_chars);
-            $bodycount = strlen($bodypart[$i]);
-            $body = substr($body, $bodycount);
+            // Pick off the next body part.
+            $bodypart[$i] = truncate_utf8($body, $max_chars, TRUE);
+
+            // Now pull that off the body.
+            $bodycount = drupal_strlen($bodypart[$i]);
+            $body = drupal_substr($body, $bodycount);
+
+            // Check for orphans.
+            if (drupal_strlen($body) < $orphan_size) {
+              drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
+                array('@num' => $i + 2)), 'status', FALSE);
+              $bodypart[$i] .= $body;
+              break;
+            }
           }
           $body_parts = implode($paging_separator, $bodypart);
         }
       }
 
       // Automatic paging based on word count.
-      elseif (variable_get('paging_automatic_method_' . $node->type, 0) == 2 && ($max_words = variable_get('paging_automatic_words_' . $node->type, 400)) != 0) {
+      elseif (variable_get('paging_automatic_method_' . $node->type, 0) == 'words'
+        && ($max_words = variable_get('paging_automatic_words_' . $node->type, 400)) != 0) {
+        $orphan_size = variable_get('paging_automatic_words_orphan_' . $type, 100);
         $words = explode(' ', $body);
         $total_words = count($words);
+        $words_remaining = $total_words - $max_words;
+
         // Check if pagination is possible.
         if ($total_words > $max_words) {
           $breaks = (int)($total_words / $max_words);
           for ($i = 1; $i < $breaks; $i++) {
             $index = $i * $max_words;
-            $words[$index] .= $paging_separator;
+            $words_remaining -= $max_words;
+
+            // Orphan check.
+            if ($words_remaining < $orphan_size) {
+              drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
+                array('@num' => $i + 1)), 'status', FALSE);
+            }
+            else {
+              // Not an orphan, treat normally.
+              $words[$index] .= $paging_separator;
+            }
           }
         }
         $body_parts = implode(' ', $words);
@@ -285,7 +312,7 @@ function paging_block_view($delta = '') {
     case 'paging_pager':
       $block['subject'] = t('Page navigation');
       $block['content'] = array(
-        '#markup' => paging_build_names(), 
+        '#markup' => paging_build_names(),
       );
       break;
   }

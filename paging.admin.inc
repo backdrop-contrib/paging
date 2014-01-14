@@ -46,7 +46,7 @@ function paging_settings() {
     '#required' => TRUE,
     '#description' => t('Choose how many pagers you would like on each page.
       The positioning of enabled pager(s) can be controlled for each
-      <a href="@url">content type</a> under <em>Manage display</em>.', 
+      <a href="@url">content type</a> under <em>Manage display</em>.',
       array('%none' => t('None'), '@paging' => '$node->paging', '@url' => url('admin/structure/types'))),
     '#default_value' => variable_get('paging_pager_count', 'one'),
     '#attributes' => array('class' => array('paging-pager')),
@@ -73,7 +73,7 @@ function paging_settings() {
   // Get all valid fields.
   $fields = field_info_fields();
   $field_options = array();
-  // Remove fields that are not on nodes. 
+  // Remove fields that are not on nodes.
   $valid_bundles = array('node'); // TODO make this work for other entity types?
   // Remove fields that are not lontext, or longtext and sumamry from the list.
   $valid_fields = array('text_long', 'text_with_summary');
@@ -123,7 +123,7 @@ function paging_settings() {
       '#default_value' => variable_get('paging_enabled_' . $type, 0),
       '#attributes' => array('class' => array('paging-enabled')),
     );
-    
+
     // Paging toggle checkbox.
     $form[$type]['paging_config']['paging_left']['paging_field_' . $type] = array(
       '#type' => 'radios',
@@ -187,8 +187,8 @@ function paging_settings() {
       '#type' => 'radios',
       '#title' => t('Automatic paging method'),
       '#options' => array(
-        'disabled' => t('Disabled'), 
-        'chars' => t('Limit by characters <small>(recommended)</small>'), 
+        'disabled' => t('Disabled'),
+        'chars' => t('Limit by characters <small>(recommended)</small>'),
         'words' => t('Limit by words')),
       '#required' => TRUE,
       '#description' => t('Method for automatic paging (ignored where paging
@@ -202,20 +202,18 @@ function paging_settings() {
       ),
     );
 
+    // Get the length options.
+    // @TODO: Do we really need 750?
+    $char_len_options = array(-1 => 750) + range(500, 7500, 500);
+    asort($char_len_options);
+    $char_len_options = drupal_map_assoc($char_len_options);
+
     // Automatic paging method. Select list to choose the number of characters per page.
     $form[$type]['paging_config']['paging_right']['paging_automatic_chars_' . $type] = array(
       '#type' => 'select',
       '#title' => t('Length of each page'),
-      '#options' => array(
-        500 => t('500 characters'), 750 => t('750 characters'),
-        1000 => t('1000 characters'), 1500 => t('1500 characters'),
-        2000 => t('2000 characters'), 2500 => t('2500 characters'),
-        3000 => t('3000 characters'), 3500 => t('3500 characters'),
-        4000 => t('4000 characters'), 4500 => t('4500 characters'),
-        5000 => t('5000 characters'), 5500 => t('5500 characters'),
-        6000 => t('6000 characters'), 6500 => t('6500 characters'),
-        7000 => t('7000 characters'), 7500 => t('7500 characters'),
-      ),
+      '#options' => $char_len_options,
+      '#field_suffix' => t('characters'),
       '#required' => TRUE,
       '#description' => '<br />' . t('Number of characters to display per page.'),
       '#default_value' => variable_get('paging_automatic_chars_' . $type, 4000),
@@ -225,23 +223,35 @@ function paging_settings() {
         'visible' => array(// action to take.
           ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
           ':input[name="paging_automatic_method_' . $type . '"]' => array('value' => 'chars'),
+          ),
         ),
-      ),
-    );
+      );
+
+    // Automatic paging method. Text box to choose orphan size.
+    $form[$type]['paging_config']['paging_right']['paging_automatic_chars_orphan_' . $type] = array(
+      '#type' => 'textfield',
+      '#title' => t('Length of orphans'),
+      '#size' => 6,
+      '#field_suffix' => t('characters'),
+      '#required' => TRUE,
+      '#description' => '<br />' . t('Number of characters to consider as an orphan.'),
+      '#default_value' => variable_get('paging_automatic_chars_orphan_' . $type, 100),
+      '#prefix' => '<div class="container-inline paging-chars-orphan paging-chars-orphan-' . $type . '">',
+      '#suffix' => '</div>',
+      '#states' => array(
+        'visible' => array(// action to take.
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
+          ':input[name="paging_automatic_method_' . $type . '"]' => array('value' => 'chars'),
+          ),
+        ),
+      );
 
     // Automatic paging method. Select list to choose the number of words per page.
     $form[$type]['paging_config']['paging_right']['paging_automatic_words_' . $type] = array(
       '#type' => 'select',
       '#title' => t('Length of each page'),
-      '#options' => array(
-        50 => t('100 words'), 150 => t('150 words'),
-        200 => t('200 words'), 250 => t('250 words'),
-        300 => t('300 words'), 350 => t('350 words'),
-        400 => t('400 words'), 450 => t('450 words'),
-        500 => t('500 words'), 550 => t('550 words'),
-        600 => t('600 words'), 650 => t('650 words'),
-        700 => t('700 words'), 750 => t('750 words'),
-      ),
+      '#options' => drupal_map_assoc(range(100, 1000, 50)),
+      '#field_suffix' => t('words'),
       '#required' => TRUE,
       '#description' => '<br />' . t('Number of words to display per page.'),
       '#default_value' => variable_get('paging_automatic_words_' . $type, 400),
@@ -251,9 +261,28 @@ function paging_settings() {
         'visible' => array(// action to take.
           ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
           ':input[name="paging_automatic_method_' . $type . '"]' => array('value' => 'words'),
+          ),
         ),
-      ),
-    );
+      );
+
+    // Automatic paging method. Text box to set orphan page size.
+    $form[$type]['paging_config']['paging_right']['paging_automatic_words_orphan_' . $type] = array(
+      '#type' => 'textfield',
+      '#title' => t('Length of orphans'),
+      '#size' => 6,
+      '#field_suffix' => t('words'),
+      '#required' => TRUE,
+      '#description' => '<br />' . t('Number of wordss to consider as an orphan.'),
+      '#default_value' => variable_get('paging_automatic_words_orphan_' . $type, 200),
+      '#prefix' => '<div class="container-inline paging-words-orphan paging-words-orphan-' . $type . '">',
+      '#suffix' => '</div>',
+      '#states' => array(
+        'visible' => array(// action to take.
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
+          ':input[name="paging_automatic_method_' . $type . '"]' => array('value' => 'words'),
+          ),
+        ),
+      );
   }
 
   $module_path = drupal_get_path('module', 'paging');
