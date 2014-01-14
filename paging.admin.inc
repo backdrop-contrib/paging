@@ -133,7 +133,7 @@ function paging_settings() {
       '#attributes' => array('class' => array('paging-enabled')),
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -148,7 +148,7 @@ function paging_settings() {
       '#default_value' => variable_get('paging_read_more_enabled_' . $type, 0),
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -162,7 +162,7 @@ function paging_settings() {
       '#default_value' => variable_get('paging_name_title_' . $type, 0),
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -175,7 +175,7 @@ function paging_settings() {
       '#attributes' => array('class' => array('paging-right')),
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -197,7 +197,7 @@ function paging_settings() {
       '#attributes' => array('class' => array('paging-method')),
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -223,8 +223,8 @@ function paging_settings() {
       '#suffix' => '</div>',
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
-          ':input[name="paging_automatic_method_' . $type .'"]' => array('value' => 'chars'),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
+          ':input[name="paging_automatic_method_' . $type . '"]' => array('value' => 'chars'),
         ),
       ),
     );
@@ -249,8 +249,8 @@ function paging_settings() {
       '#suffix' => '</div>',
       '#states' => array(
         'visible' => array(// action to take.
-          ':input[name="paging_enabled_' . $type .'"]' => array('checked' => TRUE),
-          ':input[name="paging_automatic_method_' . $type .'"]' => array('value' => 'words'),
+          ':input[name="paging_enabled_' . $type . '"]' => array('checked' => TRUE),
+          ':input[name="paging_automatic_method_' . $type . '"]' => array('value' => 'words'),
         ),
       ),
     );

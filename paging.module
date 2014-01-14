@@ -166,7 +166,7 @@ function paging_node_view($node, $view_mode, $langcode) {
     if ($view_mode == 'teaser') {
       // Check to see if the summary is longer than our first page.
       if ($node->page_count > 1 && strlen($summary) > strlen($node->pages[0])) {
-        $node->pagemore = true;
+        $node->pagemore = TRUE;
       }
     }
 
