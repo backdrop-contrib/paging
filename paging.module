@@ -369,7 +369,7 @@ function paging_fetch_names($nid) {
 function paging_fetch_body($node, $safe = FALSE) {
   $body = '';
   $field = variable_get('paging_field_' . $node->type, 0);
-  if ($field && property_exists($node, $field)) {
+  if ($field && isset($node->$field) && $node->$field) {
     $lang = $node->language;
     if ($safe) {
       $body = $node->{$field}[$lang][0]['safe_value'];
@@ -396,7 +396,7 @@ function paging_fetch_body($node, $safe = FALSE) {
 function paging_fetch_body_summary($node, $safe = FALSE) {
   $summary = '';
   $field = variable_get('paging_field_' . $node->type, 0);
-  if ($field) {
+  if ($field && isset($node->$field) && $node->$field) {
     $lang = $node->language;
     if ($safe) {
       $body = $node->{$field}[$lang][0]['safe_summary'];
