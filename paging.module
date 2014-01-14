@@ -398,7 +398,8 @@ function paging_fetch_body($node, $safe = FALSE) {
   $field = variable_get('paging_field_' . $node->type, 0);
   if ($field && isset($node->$field) && $node->$field) {
     $lang = $node->language;
-    if ($safe) {
+    // Some body fields appear not to have a 'safe_value'.
+    if ($safe && !empty($node->{$field}[$lang][0]['safe_value']) ) {
       $body = $node->{$field}[$lang][0]['safe_value'];
     }
     else {
@@ -425,7 +426,8 @@ function paging_fetch_body_summary($node, $safe = FALSE) {
   $field = variable_get('paging_field_' . $node->type, 0);
   if ($field && isset($node->$field) && $node->$field) {
     $lang = $node->language;
-    if ($safe) {
+    // Some body fields appear not to have a 'safe_summary'.
+    if ($safe && !empty($node->{$field}[$lang][0]['safe_summary'])) {
       $body = $node->{$field}[$lang][0]['safe_summary'];
     }
     else {
