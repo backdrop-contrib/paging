@@ -210,7 +210,6 @@ function paging_node_view($node, $view_mode, $langcode) {
     //    e.g. http://www.example.com/node/1?page=full or node/1/full.
 
     if (($view_mode != 'teaser') && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
-
       pager_default_initialize($node->page_count, 1, $element);
 
       // Store the page in here, for safe keeping.
@@ -245,7 +244,7 @@ function paging_node_view($node, $view_mode, $langcode) {
 
       if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
         // Set the browser title to page's name.
-        drupal_set_title($node->page_names[$page]);
+        drupal_set_title(t($node->page_names[$page]));
       }
     }
   }
@@ -453,7 +452,7 @@ function _paging_populate_empty_names($names, $title) {
   foreach ($names as $key => $name) {
     trim($names[$key]);
     if (empty($names[$key])) {
-      $names[$key] = t('!title - page !number', array('!title' => check_plain($title), '!number' => ($key + 1)));;
+      $names[$key] = $title . ' - Page ' . ($key + 1);
     }
   }
 
