@@ -1,3 +1,5 @@
+(function ($) {
+
 Drupal.wysiwyg.plugins.paging_pagebreak = {
 
   /**
@@ -56,3 +58,5 @@ Drupal.wysiwyg.plugins.paging_pagebreak = {
     return '<hr title="&lt;--pagebreak--&gt;" class="paging-pagebreak" />';
   }
 };
+
+})(jQuery);
