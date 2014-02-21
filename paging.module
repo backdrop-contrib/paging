@@ -218,7 +218,7 @@ function paging_node_view($node, $view_mode, $langcode) {
       // Clean up page number for use later on.
       $page = ($current_page[$element] != '') ? $current_page[$element] : 0 ;
       // Put the current page contents into the body.
-      $lang = $node->language;
+      $lang = isset($node->{$field}[$node->language]) ? $node->language : LANGUAGE_NONE;
       $format = $node->{$field}[$lang][0]['format'];
       $node->content[$field][0]['#markup'] = check_markup($node->pages[$page], $format, FALSE);
 
@@ -396,7 +396,7 @@ function paging_fetch_body($node, $safe = FALSE) {
   $body = '';
   $field = variable_get('paging_field_' . $node->type, 0);
   if ($field && isset($node->$field) && $node->$field) {
-    $lang = $node->language;
+    $lang = isset($node->{$field}[$node->language]) ? $node->language : LANGUAGE_NONE;
     // Some body fields appear not to have a 'safe_value'.
     if ($safe && !empty($node->{$field}[$lang][0]['safe_value']) ) {
       $body = $node->{$field}[$lang][0]['safe_value'];
@@ -424,7 +424,7 @@ function paging_fetch_body_summary($node, $safe = FALSE) {
   $summary = '';
   $field = variable_get('paging_field_' . $node->type, 0);
   if ($field && isset($node->$field) && $node->$field) {
-    $lang = $node->language;
+    $lang = isset($node->{$field}[$node->language]) ? $node->language : LANGUAGE_NONE;
     // Some body fields appear not to have a 'safe_summary'.
     if ($safe && !empty($node->{$field}[$lang][0]['safe_summary'])) {
       $body = $node->{$field}[$lang][0]['safe_summary'];
