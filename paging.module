@@ -473,7 +473,6 @@ function _paging_populate_empty_names($names, $title) {
   return $names;
 }
 
-
 /**
  * Implements hook_field_formatter_info().
  */
@@ -531,12 +530,12 @@ function _paging_split_content($item, $node, $lang, $delta) {
       // Clean up page number for use later on.
       $page = ($current_page[$element] != '') ? $current_page[$element] : 0 ;
       $output = check_markup($node->paging[$lang]['pages'][$page], $format, FALSE);
-      return $output;
     }
-    elseif($node->paging[$lang]['page_count'] == 1 || arg(2) != 'full' || $page != 'full') {
+    elseif ($node->paging[$lang]['page_count'] == 1 || arg(2) != 'full' || $page != 'full') {
       $value = isset($item['safe_value']) ? $item['safe_value'] : $item['value'];
       $output = check_markup($value, $format, FALSE);
-      return $output;
     }
+
+    return $output;
   }
 }
