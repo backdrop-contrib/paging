@@ -93,8 +93,6 @@ function paging_node_load($nodes, $types) {
   }
 
   foreach ($nodes as $node) {
-    // Get the field to use as the body.
-    $body = paging_fetch_body($node);
     // Load the separator for the content type (backwards compatability w 1.0)
     $paging_separator = variable_get('paging_separator_' . $node->type, FALSE);
     // Load the global separator.
@@ -102,74 +100,81 @@ function paging_node_load($nodes, $types) {
       $paging_separator = variable_get('paging_separator', '<!--pagebreak-->');
     }
 
-    // Check if manual page separators were used.
-    if (strpos($body, $paging_separator) !== FALSE) {
-      $node->pages = explode($paging_separator, $body);
-      $node->page_count = count($node->pages);
-    }
-    else {
-      $body_parts = $body;
+    $field = variable_get('paging_field_' . $node->type, 0);
 
-      // Automatic paging based on character count.
-      if (variable_get('paging_automatic_method_' . $node->type, 0) == 'chars'
-        && ($max_chars = variable_get('paging_automatic_chars_' . $node->type, 4000)) != 0) {
-        $orphan_size = variable_get('paging_automatic_chars_orphan_' . $type, 100);
-        $total_chars = drupal_strlen($body);
-        // Check if pagination is possible.
-        if ($total_chars > $max_chars) {
-          $body = $body;
-          $breaks = (int)($total_chars / $max_chars);
-          $bodypart = array();
-          for ($i = 0; $i <= $breaks; $i++) {
-            // Pick off the next body part.
-            $bodypart[$i] = truncate_utf8($body, $max_chars, TRUE);
+    if (!empty($node->{$field})) {
+      foreach ($node->{$field} as $language => $item) {
+        $body = $item[0]['value'];
+        // Check if manual page separators were used.
+        if (strpos($body, $paging_separator) !== FALSE) {
+          $node->paging[$language]['pages'] = explode($paging_separator, $body);
+          $node->paging[$language]['page_count'] = count($node->paging[$language]['pages']);
+        }
+        else {
+          $body_parts = $body;
 
-            // Now pull that off the body.
-            $bodycount = drupal_strlen($bodypart[$i]);
-            $body = drupal_substr($body, $bodycount);
+          // Automatic paging based on character count.
+          if (variable_get('paging_automatic_method_' . $node->type, 0) == 'chars'
+            && ($max_chars = variable_get('paging_automatic_chars_' . $node->type, 4000)) != 0) {
+            $orphan_size = variable_get('paging_automatic_chars_orphan_' . $type, 100);
+            $total_chars = drupal_strlen($body);
+            // Check if pagination is possible.
+            if ($total_chars > $max_chars) {
+              $body = $body;
+              $breaks = (int)($total_chars / $max_chars);
+              $bodypart = array();
+              for ($i = 0; $i <= $breaks; $i++) {
+                // Pick off the next body part.
+                $bodypart[$i] = truncate_utf8($body, $max_chars, TRUE);
 
-            // Check for orphans.
-            if (drupal_strlen($body) < $orphan_size) {
-              drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
-                array('@num' => $i + 2)), 'status', FALSE);
-              $bodypart[$i] .= $body;
-              break;
+                // Now pull that off the body.
+                $bodycount = drupal_strlen($bodypart[$i]);
+                $body = drupal_substr($body, $bodycount);
+
+                // Check for orphans.
+                if (drupal_strlen($body) < $orphan_size) {
+                  drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
+                    array('@num' => $i + 2)), 'status', FALSE);
+                  $bodypart[$i] .= $body;
+                  break;
+                }
+              }
+              $body_parts = implode($paging_separator, $bodypart);
             }
           }
-          $body_parts = implode($paging_separator, $bodypart);
-        }
-      }
 
-      // Automatic paging based on word count.
-      elseif (variable_get('paging_automatic_method_' . $node->type, 0) == 'words'
-        && ($max_words = variable_get('paging_automatic_words_' . $node->type, 400)) != 0) {
-        $orphan_size = variable_get('paging_automatic_words_orphan_' . $type, 100);
-        $words = explode(' ', $body);
-        $total_words = count($words);
-        $words_remaining = $total_words - $max_words;
+          // Automatic paging based on word count.
+          elseif (variable_get('paging_automatic_method_' . $node->type, 0) == 'words'
+            && ($max_words = variable_get('paging_automatic_words_' . $node->type, 400)) != 0) {
+            $orphan_size = variable_get('paging_automatic_words_orphan_' . $type, 100);
+            $words = explode(' ', $body);
+            $total_words = count($words);
+            $words_remaining = $total_words - $max_words;
 
-        // Check if pagination is possible.
-        if ($total_words > $max_words) {
-          $breaks = (int)($total_words / $max_words);
-          for ($i = 1; $i < $breaks; $i++) {
-            $index = $i * $max_words;
-            $words_remaining -= $max_words;
+            // Check if pagination is possible.
+            if ($total_words > $max_words) {
+              $breaks = (int)($total_words / $max_words);
+              for ($i = 1; $i < $breaks; $i++) {
+                $index = $i * $max_words;
+                $words_remaining -= $max_words;
 
-            // Orphan check.
-            if ($words_remaining < $orphan_size) {
-              drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
-                array('@num' => $i + 1)), 'status', FALSE);
+                // Orphan check.
+                if ($words_remaining < $orphan_size) {
+                  drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
+                    array('@num' => $i + 1)), 'status', FALSE);
+                }
+                else {
+                  // Not an orphan, treat normally.
+                  $words[$index] .= $paging_separator;
+                }
+              }
             }
-            else {
-              // Not an orphan, treat normally.
-              $words[$index] .= $paging_separator;
-            }
+            $body_parts = implode(' ', $words);
           }
+          $node->paging[$language]['pages'] = explode($paging_separator, $body_parts);
+          $node->paging[$language]['page_count'] = count($node->paging[$language]['pages']);
         }
-        $body_parts = implode(' ', $words);
       }
-      $node->pages = explode($paging_separator, $body_parts);
-      $node->page_count = count($node->pages);
     }
   }
 }
@@ -179,72 +184,80 @@ function paging_node_load($nodes, $types) {
  */
 function paging_node_view($node, $view_mode, $langcode) {
   // If paging is enabled for this node type.
-  if (variable_get('paging_enabled_' . $node->type, 0) == TRUE && property_exists($node, 'page_count')) {
+  if (variable_get('paging_enabled_' . $node->type, 0) == TRUE) {
     // Get the paging field name.
     $field = variable_get('paging_field_' . $node->type, 0);
-    // Get the field to use as the body.
-    $body = paging_fetch_body($node, TRUE);
-    // Get the summary version of the field to use as the body.
-    $summary = paging_fetch_body_summary($node, TRUE);
-    // Fetch a structured array containing page names.
-    $node->page_names = paging_fetch_names($body);
 
-    // Check if view_mode is teaser.
-    if ($view_mode == 'teaser') {
-      // Check to see if the summary is longer than our first page.
-      if ($node->page_count > 1 && strlen($summary) > strlen($node->pages[0])) {
-        $node->pagemore = TRUE;
-      }
+    // Fall back to default language if translation doesn't exist.
+    if (empty($node->{$field}[$langcode])) {
+      $langcode = $node->language;
     }
 
-    // Set an element value for this pager.
-    $element = 0;
-    // Pull page from the URL query string.
-    $page = isset($_GET['page']) ? $_GET['page'] : '';
+    if (isset($node->paging[$langcode]['page_count'])) {
+      // Get the field to use as the body.
+      $body = paging_fetch_body($node, TRUE);
+      // Get the summary version of the field to use as the body.
+      $summary = paging_fetch_body_summary($node, TRUE);
+      // Fetch a structured array containing page names.
+      $node->paging[$langcode]['page_names'] = paging_fetch_names($body);
 
-    // Only do paging
-    // a) if not in teaser view mode;
-    // b) if there is more than one page;
-    // c) if a printable version is not being requested; or
-    // d) if a non-paged version is not being explicitly requested
-    //    e.g. http://www.example.com/node/1?page=full or node/1/full.
-
-    if (($view_mode != 'teaser') && $node->page_count > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
-      pager_default_initialize($node->page_count, 1, $element);
-
-      // Store the page in here, for safe keeping.
-      $current_page = explode(',', $page);
-
-      // Clean up page number for use later on.
-      $page = ($current_page[$element] != '') ? $current_page[$element] : 0 ;
-      // Put the current page contents into the body.
-      $lang = isset($node->{$field}[$node->language]) ? $node->language : LANGUAGE_NONE;
-      $format = $node->{$field}[$lang][0]['format'];
-      $node->content[$field][0]['#markup'] = check_markup($node->pages[$page], $format, FALSE);
-
-      // Mapping the pages in $node->page_names and $node->page_count to set number of pages as the array length.
-      $fake = array_fill(0, ($node->page_count - 1) + 1, '');
-      $length = count($fake) > count($node->page_names) ? count($fake) : count($node->page_names);
-      for ($i=0; $i<$length; ++$i) {
-        $merged[$i] = array_key_exists($i, $node->page_names) ? $node->page_names[$i] : '';
-      }
-      // Fill the empty names with node title and page number.
-      $node->page_names = _paging_populate_empty_names($merged, $node->title);
-
-      // Generate the pager.
-      $pager = theme('pager', array('element' => $element));
-
-      // Add pager to node content.
-      $node->content['paging']['#markup'] = $pager;
-      // Add the second pager if requested.
-      $setting = variable_get('paging_pager_count', 'one');
-      if ($setting == 'two') {
-        $node->content['paging_above']['#markup'] = $pager;
+      // Check if view_mode is teaser.
+      if ($view_mode != 'full') {
+        // Check to see if the summary is longer than our first page.
+        if ($node->paging[$langcode]['page_count'] > 1 && strlen($summary) > strlen($node->paging[$langcode]['pages'][0])) {
+          $node->paging[$langcode]['pagemore'] = TRUE;
+        }
       }
 
-      if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
-        // Set the browser title to page's name.
-        drupal_set_title(t($node->page_names[$page]));
+      // Set an element value for this pager.
+      $element = 0;
+      // Pull page from the URL query string.
+      $page = isset($_GET['page']) ? $_GET['page'] : '';
+
+      // Only do paging
+      // a) if not in teaser view mode;
+      // b) if there is more than one page;
+      // c) if a printable version is not being requested; or
+      // d) if a non-paged version is not being explicitly requested
+      //    e.g. http://www.example.com/node/1?page=full or node/1/full.
+
+      if (($view_mode == 'full') && $node->paging[$langcode]['page_count'] > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
+        pager_default_initialize($node->paging[$langcode]['page_count'], 1, $element);
+
+        // Store the page in here, for safe keeping.
+        $current_page = explode(',', $page);
+
+        // Clean up page number for use later on.
+        $page = ($current_page[$element] != '') ? $current_page[$element] : 0;
+        // Put the current page contents into the body.
+        $lang = isset($node->{$field}[$node->language]) ? $node->language : LANGUAGE_NONE;
+        $format = $node->{$field}[$lang][0]['format'];
+        $node->content[$field][0]['#markup'] = check_markup($node->paging[$langcode]['pages'][$page], $format, FALSE);
+
+        // Mapping the pages in $node->paging[$langcode]['page_names'] and $node->paging[$langcode]['page_count'] to set number of pages as the array length.
+        $fake = array_fill(0, ($node->paging[$langcode]['page_count'] - 1) + 1, '');
+        $length = count($fake) > count($node->paging[$langcode]['page_names']) ? count($fake) : count($node->paging[$langcode]['page_names']);
+        for ($i = 0; $i < $length; ++$i) {
+          $merged[$i] = array_key_exists($i, $node->paging[$langcode]['page_names']) ? $node->paging[$langcode]['page_names'][$i] : '';
+        }
+        // Fill the empty names with node title and page number.
+        $node->paging[$langcode]['page_names'] = _paging_populate_empty_names($merged, $node->title);
+
+        // Generate the pager.
+        $pager = theme('pager', array('element' => $element));
+
+        // Add pager to node content.
+        $node->content['paging']['#markup'] = $pager;
+        // Add the second pager if requested.
+        $setting = variable_get('paging_pager_count', 'one');
+        if ($setting == 'two') {
+          $node->content['paging_above']['#markup'] = $pager;
+        }
+
+        if (variable_get('paging_name_title_' . $node->type, 0) && !empty($page)) {
+          // Set the browser title to page's name.
+          drupal_set_title(t($node->paging[$langcode]['page_names'][$page]));
+        }
       }
     }
   }
@@ -330,6 +343,7 @@ function paging_block_view($delta = '') {
  */
 function paging_build_names($nid = NULL) {
   global $pager_page_array;
+  global $language;
   // Load node ID form URL, if none was supplied.
   $nid = $nid ? $nid : arg(1);
   // Fetch a structured array containing page names.
@@ -339,7 +353,7 @@ function paging_build_names($nid = NULL) {
   // Invoke 'load' operation in hook_nodeapi() implementation to calculate the actual number of pages in the node body.
   paging_node_load(array($node), array($node->type));
   // Comparing and mapping the number of pages in $names and $node->page_count.
-  $fake = array_fill(0, (($node->page_count - 1) < 1 ? 1 : ($node->page_count - 1)) + 1, '');
+  $fake = array_fill(0, (($node->paging[$language->language]['page_count'] - 1) < 1 ? 1 : ($node->paging[$language->language]['page_count'] - 1)) + 1, '');
   $length = count($fake) > count($names) ? count($fake) : count($names);
   $merged = array();
   for ($i=0; $i<$length; ++$i) {
@@ -393,16 +407,16 @@ function paging_fetch_names($nid) {
  *   The complete text from the body, or main field of that node.
  */
 function paging_fetch_body($node, $safe = FALSE) {
+  global $language;
   $body = '';
   $field = variable_get('paging_field_' . $node->type, 0);
   if ($field && isset($node->$field) && $node->$field) {
-    $lang = isset($node->{$field}[$node->language]) ? $node->language : LANGUAGE_NONE;
     // Some body fields appear not to have a 'safe_value'.
-    if ($safe && !empty($node->{$field}[$lang][0]['safe_value']) ) {
-      $body = $node->{$field}[$lang][0]['safe_value'];
+    if ($safe && !empty($node->{$field}[$language->language][0]['safe_value']) ) {
+      $body = $node->{$field}[$language->language][0]['safe_value'];
     }
     else {
-      $body = $node->{$field}[$lang][0]['value'];
+      $body = $node->{$field}[$language->language][0]['value'];
     }
   }
 
@@ -457,4 +471,72 @@ function _paging_populate_empty_names($names, $title) {
   }
 
   return $names;
+}
+
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function paging_field_formatter_info() {
+  return array(
+    'paging_paged' => array(
+      'label' => t('Paged'),
+      'field types' => array('text_long', 'text_with_summary'),
+      'settings' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function paging_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  switch ($display['type']) {
+    case 'paging_paged':
+      foreach ($items as $delta => $item) {
+        $markup = _paging_split_content($item, $entity, $langcode, $delta);
+        $element[$delta] = array(
+          '#data' => $item['value'],
+          '#markup' => $markup,
+        );
+      }
+      break;
+  }
+
+  return $element;
+}
+
+/**
+ * Function splits field value into chunks for pagination.
+ */
+function _paging_split_content($item, $node, $lang, $delta) {
+  // If paging is enabled for this node type.
+  if (variable_get('paging_enabled_' . $node->type, 0) == TRUE && isset($node->paging[$lang]['page_count'])) {
+    // Get the paging field name.
+    $field = variable_get('paging_field_' . $node->type, 0);
+
+    // Set an element value for this pager.
+    $element = 0;
+    // Pull page from the URL query string.
+    $page = isset($_GET['page']) ? $_GET['page'] : '';
+    // Put the current page contents into the body.
+    $format = $node->{$field}[$lang][$delta]['format'];
+
+    if ($node->paging[$lang]['page_count'] > 1 && arg(2) != 'print' && arg(2) != 'full' && $page != 'full') {
+      // Store the page in here, for safe keeping.
+      $current_page = explode(',', $page);
+
+      // Clean up page number for use later on.
+      $page = ($current_page[$element] != '') ? $current_page[$element] : 0 ;
+      $output = check_markup($node->paging[$lang]['pages'][$page], $format, FALSE);
+      return $output;
+    }
+    elseif($node->paging[$lang]['page_count'] == 1 || arg(2) != 'full' || $page != 'full') {
+      $value = isset($item['safe_value']) ? $item['safe_value'] : $item['value'];
+      $output = check_markup($value, $format, FALSE);
+      return $output;
+    }
+  }
 }
