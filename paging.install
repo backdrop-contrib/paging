@@ -18,7 +18,7 @@ function paging_enable() {
 function paging_uninstall() {
   // Delete all variables starting with "paging" in their name.
   db_query("DELETE FROM {variable} WHERE name LIKE 'paging%'");
-  db_query("DELETE FROM {filters} WHERE module = 'paging'");
+  db_query("DELETE FROM {filter} WHERE module = 'paging'");
 }
 
 /**
