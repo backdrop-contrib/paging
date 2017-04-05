@@ -5,7 +5,7 @@
  */
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function paging_uninstall() {
   // Delete all variables starting with "paging" in their name.
@@ -14,7 +14,7 @@ function paging_uninstall() {
 }
 
 /**
- * Remove 5 -> 6 Upgrade function.
+ * Implements hook_update_last_removed().
  */
 function paging_update_last_removed() {
   return 6000;
@@ -23,4 +23,6 @@ function paging_update_last_removed() {
 /**
  * Drupal 6 -> Drupal 7 upgrade path.
  */
-// @todo
+function paging_update_7000() {
+  return 6000;
+}

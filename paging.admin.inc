@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Administrative pages for paging module.

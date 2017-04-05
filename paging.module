@@ -1,13 +1,12 @@
 <?php
-
 /**
  * @file
  * Allows a node to be broken into multiple pages via a tag.
  *
  * Original module written by Marco Scutari.
  * Rewritten, considerably shortened & made more Drupal-friendly by Earl Miles.
- * Yet again rewritten, extended, and currently maintained by Gurpartap Singh.
- * Upgraded to Drupal 7 by Jen Lampton.
+ * Yet again rewritten, extended, and maintained by Gurpartap Singh.
+ * Upgraded to Drupal 7 and maintained by Jen Lampton.
  */
 
 /**
@@ -45,7 +44,7 @@ function paging_menu() {
 }
 
 /**
- * Implementation of hook_filter_info().
+ * Implements hook_filter_info().
  */
 function paging_filter_info() {
   $filters['paging'] = array(
@@ -291,7 +290,7 @@ function paging_field_extra_fields() {
 }
 
 /**
- * Implementation of hook_wysiwyg_include_directory().
+ * Implements hook_wysiwyg_include_directory().
  */
 function paging_wysiwyg_include_directory($type) {
   switch ($type) {
@@ -410,13 +409,19 @@ function paging_fetch_body($node, $safe = FALSE) {
   global $language;
   $body = '';
   $field = variable_get('paging_field_' . $node->type, 0);
-  if ($field && isset($node->$field) && $node->$field) {
-    // Some body fields appear not to have a 'safe_value'.
-    if ($safe && !empty($node->{$field}[$language->language][0]['safe_value']) ) {
-      $body = $node->{$field}[$language->language][0]['safe_value'];
+  if ($field && isset($node->{$field})) {
+    if (!empty($node->{$field}[$language->language])) {
+      $lang = $language->language;
     }
     else {
-      $body = $node->{$field}[$language->language][0]['value'];
+      $lang = $node->language;
+    }
+    // Some body fields appear not to have a 'safe_value'.
+    if ($safe && !empty($node->{$field}[$lang][0]['safe_value']) ) {
+      $body = $node->{$field}[$lang][0]['safe_value'];
+    }
+    else {
+      $body = $node->{$field}[$lang][0]['value'];
     }
   }
 
