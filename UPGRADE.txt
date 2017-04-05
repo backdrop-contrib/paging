@@ -1,9 +1,8 @@
 Upgrade notes:
 ===============
 
-The upgrade path from Drupal 6 Paging module to Drupal 7 is underway, but it is
-not done yet. For now, this file will serve as documentation between the
-differences between the D6 and D7 versions of the modules.
+This file contains documentation between the differences between the
+Drupal 6 and Drupal 7 versions of the module.
 
 
 Unsupported Features in D7:

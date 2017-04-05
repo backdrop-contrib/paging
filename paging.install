@@ -14,15 +14,60 @@ function paging_uninstall() {
 }
 
 /**
- * Implements hook_update_last_removed().
+ * Update: remove legacy Drupal 6 variables, add new D7 variables.
  */
-function paging_update_last_removed() {
-  return 6000;
+function paging_update_7000(&$sandbox) {
+  // List of paging variables that moved from type-specfic to general.
+  $general_vars = array(
+    'paging_read_more_enabled' => FALSE,
+    'paging_names_enabled' => FALSE,
+    'paging_name_title' => FALSE,
+    'paging_read_more_enabled' => TRUE,
+    'paging_separator' => '<!--pagebreak-->',
+  );
+
+  // New paging variables - per type.
+  $type_vars = array(
+    'paging_field' => 'body',
+    'paging_automatic_words_orphan' => '100',
+    'paging_automatic_chars_orphan' => '400',
+  );
+
+  // Old variables that will be remaining per-type.
+  //'paging_enabled'
+  //'paging_automatic_method'
+  //'paging_automatic_chars'
+  //'paging_automatic_words'
+
+  $types = node_type_get_names();
+  foreach ($types as $machine => $human) {
+    // Remove legacy variables, unused in D7.
+    variable_del('paging_ajax_enabled_' . $machine);
+    variable_del('paging_pager_widget_' . $machine);
+    variable_del('paging_pager_widget_custom_' . $machine);
+    variable_del('paging_pager_widget_position_' . $machine);
+    variable_del('paging_separator_widget_' . $machine);
+
+    // Move specific content-type settings to global.
+      // If ANY of the previous settings were set, save them to the new.
+    foreach ($general_vars as $name => $default) {
+      $value = variable_get($name . '_' . $machine, $default);
+      // Yes, this will overwrite if there was more than one :/
+      variable_set($name, $value);
+    }
+
+    // Set new type-specific variables.
+    foreach ($type_vars as $name => $default) {
+      variable_set($name . '_' . $machine, $default);
+    }
+  }
+
+  return t('Legacy variables have been removed, new variables added.');
 }
 
 /**
- * Drupal 6 -> Drupal 7 upgrade path.
+ * Implements hook_update_last_removed().
  */
-function paging_update_7000() {
+function paging_update_last_removed() {
   return 6000;
 }
