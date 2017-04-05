@@ -1,3 +1,5 @@
 name = Paging
 description = "Allows users to use a tag to break up a node into multiple pages."
 core = 7.x
+
+configure = admin/config/content/paging
