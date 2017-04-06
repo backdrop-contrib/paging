@@ -22,7 +22,7 @@ function paging_settings() {
     }
   }
   if (!$paging_filter) {
-    drupal_set_message(t('Paging filter has not been enabled for any text formats. !link.',
+    backdrop_set_message(t('Paging filter has not been enabled for any text formats. !link.',
       array('!link' => l(t('Enable it now'), 'admin/config/content/formats'))), 'warning paging-warning');
   }
 

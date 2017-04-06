@@ -1,5 +1,6 @@
+type = module
 name = Paging
 description = Allows a single post to be divided into multiple pages.
-core = 7.x
+backdrop = 1.x
 
 configure = admin/config/content/paging

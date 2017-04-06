@@ -79,5 +79,5 @@ function paging_update_7000(&$sandbox) {
  * Implements hook_update_last_removed().
  */
 function paging_update_last_removed() {
-  return 6000;
+  return 7000;
 }
