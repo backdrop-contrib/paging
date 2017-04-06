@@ -44,6 +44,165 @@ function paging_menu() {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  $type = $form['#node_type']->type;
+  $form['paging'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Pagination Settings'),
+    '#group' => 'additional_settings',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['paging']['paging_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Enable pagination',
+    '#default_value' => variable_get('paging_enabled_' . $type, 0),
+    '#attributes' => array('class' => array('paging-enabled')),
+  );
+
+  // Get all valid fields.
+  $fields = field_info_fields();
+  $field_options = array();
+  // Remove fields that are not on nodes.
+  $valid_bundles = array('node'); // TODO make this work for other entity types?
+  // Remove fields that are not lontext, or longtext and sumamry from the list.
+  $valid_fields = array('text_long', 'text_with_summary');
+  // @todo - remove fields with multiple values?
+  foreach ($fields as $fieldname => $field) {
+    $option = TRUE;
+    if (!in_array($field['type'], $valid_fields)) {
+      unset($fields[$fieldname]);
+      $option = FALSE;
+    }
+    else {
+      foreach ($valid_bundles as $bundle_name) {
+        if (!array_key_exists($bundle_name, $field['bundles'])) {
+          unset($fields[$fieldname]);
+          $option = FALSE;
+        }
+      }
+    }
+    if ($option) {
+      $field_options[$fieldname] = $fieldname;
+    }
+  }
+
+  // @todo - replace this with formatter?
+  $default_field = isset($field_options['body'])? 'body' : reset(array_keys($field_options));
+  $form['paging']['paging_field'] = array(
+    '#type' => 'radios',
+    '#title' => 'Select field to use for page breaks',
+    '#options' => $field_options,
+    '#default_value' => variable_get('paging_field_' . $type, $default_field),
+    '#attributes' => array('class' => array('paging-enabled')),
+    '#states' => array(
+      'visible' => array(// action to take.
+        ':input[name="paging_enabled"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
+  // Optional automatic paging method.
+    // Each option opens the corresponding character/word length select list.
+    // Accompanied by paging.admin.js.
+  // @TODO this will need an upgrade path. (now specifying keys for options)
+  $form['paging']['paging_automatic_method'] = array(
+    '#type' => 'radios',
+    '#title' => t('Automatic paging'),
+    '#options' => array(
+      'disabled' => t('Disabled'),
+      'chars' => t('Limit by characters <small>(recommended)</small>'),
+      'words' => t('Limit by words')),
+    '#required' => TRUE,
+    '#description' => t('This setting is ignored when a paging separator like %pagebreak is found in the text.', array('%pagebreak' => variable_get('paging_separator', '<!--pagebreak-->'))),
+    '#default_value' => variable_get('paging_automatic_method_' . $type, 'disabled'),
+    '#attributes' => array('class' => array('paging-method')),
+    '#states' => array(
+      'visible' => array(// action to take.
+        ':input[name="paging_enabled"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
+  // Get the length options.
+  // @TODO: Do we really need 750?
+  $char_len_options = array(-1 => 750) + range(500, 7500, 500);
+  asort($char_len_options);
+  $char_len_options = drupal_map_assoc($char_len_options);
+
+  // Automatic paging method. Select list to choose the number of characters per page.
+  $form['paging']['paging_automatic_chars'] = array(
+    '#type' => 'select',
+    '#title' => t('Number of characters to display per page'),
+    '#options' => $char_len_options,
+    '#field_suffix' => t('characters'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('paging_automatic_chars_' . $type, 4000),
+    '#states' => array(
+      'visible' => array(// action to take.
+        ':input[name="paging_enabled"]' => array('checked' => TRUE),
+        ':input[name="paging_automatic_method"]' => array('value' => 'chars'),
+      ),
+    ),
+  );
+
+  // Automatic paging method. Text box to choose orphan size.
+  $form['paging']['paging_automatic_chars_orphan'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minumum character length for final page'),
+    '#size' => 6,
+    '#field_suffix' => t('characters'),
+    '#required' => TRUE,
+    '#description' => t('If automatic paging causes the final page to have fewer characters, that text will be appended to the previous page.'),
+    '#default_value' => variable_get('paging_automatic_chars_orphan_' . $type, 100),
+    '#attached' => array('css' => array(drupal_get_path('module', 'paging') . '/paging.admin.css')),
+    '#states' => array(
+      'visible' => array(// action to take.
+        ':input[name="paging_enabled"]' => array('checked' => TRUE),
+        ':input[name="paging_automatic_method"]' => array('value' => 'chars'),
+      ),
+    ),
+  );
+
+  // Automatic paging method. Select list to choose the number of words per page.
+  $form['paging']['paging_automatic_words'] = array(
+    '#type' => 'select',
+    '#title' => t('Number of words to display per page'),
+    '#options' => drupal_map_assoc(range(100, 1000, 50)),
+    '#field_suffix' => t('words'),
+    '#required' => TRUE,
+    '#default_value' => variable_get('paging_automatic_words_' . $type, 400),
+    '#states' => array(
+      'visible' => array(// action to take.
+        ':input[name="paging_enabled"]' => array('checked' => TRUE),
+        ':input[name="paging_automatic_method"]' => array('value' => 'words'),
+      ),
+    ),
+  );
+
+  // Automatic paging method. Text box to set orphan page size.
+  $form['paging']['paging_automatic_words_orphan'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minumum word length for final page'),
+    '#size' => 6,
+    '#field_suffix' => t('words'),
+    '#required' => TRUE,
+    '#description' => t('If automatic paging causes the final page to have fewer words, that text will be appended to the previous page.'),
+    '#default_value' => variable_get('paging_automatic_words_orphan_' . $type, 200),
+    '#attached' => array('css' => array(drupal_get_path('module', 'paging') . '/paging.admin.css')),
+    '#states' => array(
+      'visible' => array(// action to take.
+        ':input[name="paging_enabled"]' => array('checked' => TRUE),
+        ':input[name="paging_automatic_method"]' => array('value' => 'words'),
+      ),
+    ),
+  );
+}
+
+/**
  * Implements hook_filter_info().
  */
 function paging_filter_info() {
@@ -271,17 +430,18 @@ function paging_field_extra_fields() {
   foreach (entity_get_info() as $entity_type => $entity_info) {
     foreach (array_keys($entity_info['bundles']) as $bundle) {
       $extra[$entity_type][$bundle]['display']['paging'] = array(
-        'label' => t('Paging pager'),
+        'label' => t('Pager'),
         'description' => t('Pager for paging module.'),
         'weight' => 20,
       );
 
       if ($setting == 'two') {
         $extra[$entity_type][$bundle]['display']['paging_above'] = array(
-          'label' => t('Paging top pager'),
+          'label' => t('Pager (top)'),
           'description' => t('A second pager for paging module, useful when you want one at both the top and bottom.'),
           'weight' => -20,
         );
+        $extra[$entity_type][$bundle]['display']['paging']['label'] = t('Pager (bottom)');
       }
     }
   }
@@ -484,7 +644,7 @@ function _paging_populate_empty_names($names, $title) {
 function paging_field_formatter_info() {
   return array(
     'paging_paged' => array(
-      'label' => t('Paged'),
+      'label' => t('Paginated'),
       'field types' => array('text_long', 'text_with_summary'),
       'settings' => array(),
     ),

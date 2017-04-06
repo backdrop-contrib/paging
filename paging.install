@@ -33,12 +33,6 @@ function paging_update_7000(&$sandbox) {
     'paging_automatic_chars_orphan' => '400',
   );
 
-  // Old variables that will be remaining per-type.
-  //'paging_enabled'
-  //'paging_automatic_method'
-  //'paging_automatic_chars'
-  //'paging_automatic_words'
-
   $types = node_type_get_names();
   foreach ($types as $machine => $human) {
     // Remove legacy variables, unused in D7.

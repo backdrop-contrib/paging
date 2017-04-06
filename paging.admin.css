@@ -1,22 +1,9 @@
 /**
  * @file
- * CSS for Pagebreak admin settings form.
+ * CSS for Pagebreak settngs on node type forms.
  */
 
-.paging-left {
-  background: none;
-  border: none;
-  float: left;
-  margin: 0;
-  padding: 0;
-  width: 44%;
-}
-
-.paging-right {
-  background: none;
-  border: none;
-  float: right;
-  margin: 0;
-  padding: 0;
-  width: 54%;
+#edit-paging-automatic-chars-orphan,
+#edit-paging-automatic-words-orphan {
+  width: auto;
 }
