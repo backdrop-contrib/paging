@@ -158,7 +158,7 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#required' => TRUE,
     '#description' => t('If automatic paging causes the final page to have fewer characters, that text will be appended to the previous page.'),
     '#default_value' => variable_get('paging_automatic_chars_orphan_' . $type, 100),
-    '#attached' => array('css' => array(drupal_get_path('module', 'paging') . '/paging.admin.css')),
+    '#attached' => array('css' => array(drupal_get_path('module', 'paging') . '/css/paging.admin.css')),
     '#states' => array(
       'visible' => array(// action to take.
         ':input[name="paging_enabled"]' => array('checked' => TRUE),
@@ -192,7 +192,7 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#required' => TRUE,
     '#description' => t('If automatic paging causes the final page to have fewer words, that text will be appended to the previous page.'),
     '#default_value' => variable_get('paging_automatic_words_orphan_' . $type, 200),
-    '#attached' => array('css' => array(drupal_get_path('module', 'paging') . '/paging.admin.css')),
+    '#attached' => array('css' => array(drupal_get_path('module', 'paging') . '/css/paging.admin.css')),
     '#states' => array(
       'visible' => array(// action to take.
         ':input[name="paging_enabled"]' => array('checked' => TRUE),
