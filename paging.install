@@ -8,8 +8,25 @@
  * Implements hook_uninstall().
  */
 function paging_uninstall() {
-  // Delete all variables starting with "paging" in their name.
-  db_query("DELETE FROM {variable} WHERE name LIKE 'paging%'");
+  // Delete all type-specific variables.
+  foreach (node_type_get_names() as $machine => $human) {
+    variable_del('paging_field_' . $machine);
+    variable_del('paging_automatic_method_' . $machine);
+    variable_del('paging_automatic_chars_' . $machine);
+    variable_del('paging_automatic_words_' . $machine);
+    variable_del('paging_automatic_words_orphan_' . $machine);
+    variable_del('paging_automatic_chars_orphan_' . $machine);
+  }
+
+  // Delete global paging variables.
+  variable_del('paging_separator');
+  variable_del('paging_read_more_enabled');
+  variable_del('paging_names_enabled');
+  variable_del('paging_name_title');
+  variable_del('paging_read_more_enabled');
+  variable_del('paging_pager_count');
+
+  // Delete the text format for paging.
   db_query("DELETE FROM {filter} WHERE module = 'paging'");
 }
 
@@ -33,8 +50,7 @@ function paging_update_7000(&$sandbox) {
     'paging_automatic_chars_orphan' => '400',
   );
 
-  $types = node_type_get_names();
-  foreach ($types as $machine => $human) {
+  foreach (node_type_get_names() as $machine => $human) {
     // Remove legacy variables, unused in D7.
     variable_del('paging_ajax_enabled_' . $machine);
     variable_del('paging_pager_widget_' . $machine);
