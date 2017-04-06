@@ -291,8 +291,6 @@ function paging_node_load($nodes, $types) {
 
                 // Check for orphans.
                 if (drupal_strlen($body) < $orphan_size) {
-                  drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
-                    array('@num' => $i + 2)), 'status', FALSE);
                   $bodypart[$i] .= $body;
                   break;
                 }
@@ -317,11 +315,7 @@ function paging_node_load($nodes, $types) {
                 $words_remaining -= $max_words;
 
                 // Orphan check.
-                if ($words_remaining < $orphan_size) {
-                  drupal_set_message(t('Page @num would be an orphan; keeping with last page.',
-                    array('@num' => $i + 1)), 'status', FALSE);
-                }
-                else {
+                if ($words_remaining >= $orphan_size) {
                   // Not an orphan, treat normally.
                   $words[$index] .= $paging_separator;
                 }
