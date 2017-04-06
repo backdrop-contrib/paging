@@ -25,9 +25,6 @@ function paging_uninstall() {
   variable_del('paging_name_title');
   variable_del('paging_read_more_enabled');
   variable_del('paging_pager_count');
-
-  // Delete the text format for paging.
-  db_query("DELETE FROM {filter} WHERE module = 'paging'");
 }
 
 /**
@@ -73,6 +70,15 @@ function paging_update_7000(&$sandbox) {
   }
 
   return t('Legacy variables have been removed, new variables added.');
+}
+
+/**
+ * Update: Delete Legacy paging filter for text formats.
+ */
+function paging_update_7001() {
+  // Delete the text format for paging.
+  db_query("DELETE FROM {filter} WHERE module = 'paging'");
+  return t('Legacy paging filter for text formats has been deleted.');
 }
 
 /**

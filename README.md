@@ -15,14 +15,13 @@ Installation
 ------------
 
 - Install this module using the official Backdrop CMS instructions at
-  https://backdropcms.org/guide/modules
+  https://backdropcms.org/guide/modules.
 
 - Configure the general pagination settings under Administration >
   Configuration > Content authoring > Paging (admin/config/content/paging).
 
-- Enable paging for the content types you want to use it on, and define specific
-  settings at for each type, under Administration > Structure > Content types
-  (admin/structure/types)
+- Enable paging for each content type and define specific settings under
+  Administration > Structure > Content types (admin/structure/types).
 
 
 Documentation
