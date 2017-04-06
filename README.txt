@@ -19,9 +19,8 @@ Installation
 2. Configure the general pagination settings under Administration >
    Configuration > Content authoring > Paging (admin/config/content/paging).
 
-3. Enable paging for the content types you want to use it on, and define
-   specific settings for each type, under Administration > Structure >
-   Content types (admin/structure/types).
+3. Enable paging for each content type and define specific settings under
+   Administration > Structure > Content types (admin/structure/types).
 
 
 Support
