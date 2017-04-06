@@ -203,36 +203,6 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Implements hook_filter_info().
- */
-function paging_filter_info() {
-  $filters['paging'] = array(
-    'title' => t('Break content into multiple pages'),
-    'description' => t('Breaks will occur where the tag %separator is placed in the text.', array('%separator' => variable_get('paging_separator', '<!--pagebreak-->'))),
-    'process callback' => 'paging_filter_paging_process',
-    'tips callback' => 'paging_filter_paging_tips',
-  );
-
-  return $filters;
-}
-
-/**
- * Implements hook_filter_FILTER_tips().
- */
-function paging_filter_paging_tips($filter, $format, $long) {
-  if ($long) {
-    return t('Allows content to be broken up into multiple pages, using a
-      separator tag (e.g. %separator), configurable on the <a href="!url">paging settings page</a>.', array(
-        '%separator' => variable_get('paging_separator', '<!--pagebreak-->'),
-        '!url' => url('admin/config/content/paging')));
-  }
-  else {
-    return t('Allows content to be broken up into multiple pages using the separator: %separator.', array(
-      '%separator' => variable_get('paging_separator', '<!--pagebreak-->')));
-  }
-}
-
-/**
  * Implements hook_node_load().
  */
 function paging_node_load($nodes, $types) {

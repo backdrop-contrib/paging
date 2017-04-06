@@ -16,11 +16,12 @@ Installation
 1. Install the pagigng moduile as usual, and enable at admin/build/modules.
    (See http://drupal.org/documentation/install/modules-themes.)
 
-2. Enable paging for the content types you want to use it on, in the paging
-   configuration at admin/config/content/paging.
+2. Configure the general pagination settings under Administration >
+   Configuration > Content authoring > Paging (admin/config/content/paging).
 
-3. Enable the paging filter for the relevant text format (usually Filtered HTML),
-   in Text Formats configuration at admin/config/content/formats path.
+3. Enable paging for the content types you want to use it on, and define
+   specific settings for each type, under Administration > Structure >
+   Content types (admin/structure/types).
 
 
 Support

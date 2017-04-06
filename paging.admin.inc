@@ -8,24 +8,6 @@
  * Menu callback; display module settings form.
  */
 function paging_settings() {
-  // Warn if paging filter is not yet enabled for any input format.
-  $paging_filter = FALSE;
-  // Retrieve all input filters.
-  foreach (filter_formats() as $format) {
-    // Further retrieve all input formats.
-    foreach (filter_list_format($format->format) as $filter) {
-      // Check if any of the input formats have paging filter enabled.
-      if ($filter->module == 'paging') {
-        $paging_filter = TRUE;
-        break;
-      }
-    }
-  }
-  if (!$paging_filter) {
-    drupal_set_message(t('Paging filter has not been enabled for any text formats. !link.',
-      array('!link' => l(t('Enable it now'), 'admin/config/content/formats'))), 'warning paging-warning');
-  }
-
   $form = array();
 
   // Geerate a list of paging settings for all node types.
