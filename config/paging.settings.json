@@ -1,0 +1,22 @@
+{
+    "_config_name": "paging.settings",
+    "_module": "paging",
+    "separator": "<!--pagebreak-->",
+    "name_title": true,
+    "read_more_enabled": true,
+    "pager_count": "one",
+    "page_enabled": false,
+    "page_field": "body",
+    "page_automatic_method": "disabled",
+    "page_automatic_chars": "4000",
+    "page_automatic_chars_orphan": "400",
+    "page_automatic_words": "1000",
+    "page_automatic_words_orphan": "100",
+    "post_enabled": true,
+    "post_field": "body",
+    "post_automatic_method": "disabled",
+    "post_automatic_chars": "4000",
+    "post_automatic_chars_orphan": "400",
+    "post_automatic_words": "1000",
+    "post_automatic_words_orphan": "100"
+}

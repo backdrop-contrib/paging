@@ -5,6 +5,17 @@
  */
 
 /**
+ * Implements hook_config_info().
+ */
+function paging_config_info() {
+  $prefixes['paging.settings'] = array(
+    'label' => t('Paging settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_menu().
  */
 function paging_menu() {
