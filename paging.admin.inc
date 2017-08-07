@@ -18,7 +18,7 @@ function paging_settings() {
   $rows = array();
   foreach ($node_types as $type => $node_type) {
     $enabled = $config->get($type . '_enabled');
-    $status = t('Disabled');
+    $status = '';
     $link_options = array('query' => array('destination' => 'admin/config/content/paging'));
     $ops = l(t('Enable'), 'admin/structure/types/manage/' . $type, $link_options);
     $auto = '';
