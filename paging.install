@@ -33,3 +33,51 @@ function paging_uninstall() {
 function paging_update_last_removed() {
   return 7001;
 }
+
+/**
+ * Implements hook_update_N(). Converts variables to config.
+ */
+function paging_update_1001() {
+  $config = config('paging.settings');
+
+  // Convert generic variables.
+  $config->set('separator', update_variable_get('paging_separator', '<!--pagebreak-->'));
+  $config->set('name_title', update_variable_get('paging_name_title', TRUE));
+  $config->set('read_more_enabled', update_variable_get('paging_read_more_enabled', TRUE));
+  $config->set('pager_count', update_variable_get('paging_pager_count', 'one'));
+  // Remove olde generic variables.
+  update_variable_del('paging_separator');
+  update_variable_del('paging_name_title');
+  update_variable_del('paging_read_more_enabled');
+  update_variable_del('paging_pager_count');
+  // Delete old generic variables nolonger used in Backdrop version.
+  update_variable_del('paging_names_enabled');
+
+  $node_types = node_type_get_types();
+  foreach ($node_types as $type => $info) {
+    // Convert specific variables.
+    $config->set($type . '_enabled', update_variable_get('paging_enabled_' . $type, FALSE));
+    $config->set($type . '_field', update_variable_get('paging_field_' . $type, 'body'));
+    $config->set($type . '_automatic_method', update_variable_get('paging_automatic_method_' . $type, 'disabled'));
+    $config->set($type . '_automatic_chars', update_variable_get('paging_automatic_chars_' . $type, '4000'));
+    $config->set($type . '_automatic_chars_orphan', update_variable_get('paging_automatic_chars_orphan_' . $type, '200'));
+    $config->set($type . '_automatic_words', update_variable_get('paging_automatic_words_' . $type, '1000'));
+    $config->set($type . '_automatic_words_orphan', update_variable_get('paging_automatic_words_orphan_' . $type, '100'));
+    // Remove old specific variables.
+    update_variable_del('paging_enabled_' . $type);
+    update_variable_del('paging_field_' . $type);
+    update_variable_del('paging_automatic_method_' . $type);
+    update_variable_del('paging_automatic_chars_' . $type);
+    update_variable_del('paging_automatic_chars_orphan_' . $type);
+    update_variable_del('paging_automatic_words_' . $type);
+    update_variable_del('paging_automatic_words_orphan_' . $type);
+
+    // Delete old specific variables nolonger used in Backdrop version.
+    update_variable_del('paging_separator_' . $type);
+    update_variable_del('paging_names_enabled_' . $type);
+    update_variable_del('paging_name_title_' . $type);
+    update_variable_del('paging_read_more_enabled_' . $type);
+  }
+
+  $config->save();
+}
