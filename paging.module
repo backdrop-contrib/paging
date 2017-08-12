@@ -538,21 +538,26 @@ function paging_fetch_names($nid) {
  */
 function paging_fetch_body($node, $safe = FALSE) {
   global $language;
+  $langcode = $language->langcode;
   $body = '';
+
   $field = config_get('paging.settings',  $node->type . '_field');
   if ($field && isset($node->{$field})) {
-    if (!empty($node->{$field}[$language->langcode])) {
+    if (!empty($node->{$field}[$langcode])) {
       $lang = $language->langcode;
     }
     else {
-      $lang = $node->langcode;
+      $lang = LANGUAGE_NONE;
     }
-    // Some body fields appear not to have a 'safe_value'.
-    if ($safe && !empty($node->{$field}[$lang][0]['safe_value']) ) {
-      $body = $node->{$field}[$lang][0]['safe_value'];
-    }
-    else {
-      $body = $node->{$field}[$lang][0]['value'];
+
+    if (!empty($node->{$field}[$lang])) {
+      // Some body fields appear not to have a 'safe_value'.
+      if ($safe && !empty($node->{$field}[$lang][0]['safe_value']) ) {
+        $body = $node->{$field}[$lang][0]['safe_value'];
+      }
+      else {
+        $body = $node->{$field}[$lang][0]['value'];
+      }
     }
   }
 
