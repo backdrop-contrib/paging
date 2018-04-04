@@ -106,6 +106,9 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     // Each option opens the corresponding character/word length select list.
     // Accompanied by paging.admin.js.
   // @TODO this will need an upgrade path. (now specifying keys for options)
+  if (!($paging_automatic_method = $config->get($type . '_automatic_method'))) {
+    $paging_automatic_method = 'disabled';
+  }
   $form['paging']['paging_automatic_method'] = array(
     '#type' => 'radios',
     '#title' => t('Automatic paging'),
@@ -113,9 +116,8 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
       'disabled' => t('Disabled'),
       'chars' => t('Limit by characters <small>(recommended)</small>'),
       'words' => t('Limit by words')),
-    '#required' => TRUE,
     '#description' => t('This setting is ignored when a paging separator like %pagebreak is found in the text.', array('%pagebreak' => $config->get('separator'))),
-    '#default_value' => $config->get($type . '_automatic_method'),
+    '#default_value' => $paging_automatic_method,
     '#attributes' => array('class' => array('paging-method')),
     '#states' => array(
       'visible' => array(// action to take.
@@ -125,12 +127,14 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   );
 
   // Automatic paging method. Select list to choose the number of characters per page.
+  if (!($paging_automatic_chars = $config->get($type . '_automatic_chars'))) {
+    $paging_automatic_chars = 4000;
+  }
   $form['paging']['paging_automatic_chars'] = array(
     '#type' => 'number',
     '#title' => t('Number of characters to display per page'),
     '#field_suffix' => t('characters'),
-    '#required' => TRUE,
-    '#default_value' => $config->get($type . '_automatic_chars'),
+    '#default_value' => $paging_automatic_chars,
     '#states' => array(
       'visible' => array(// action to take.
         ':input[name="paging[paging_enabled]"]' => array('checked' => TRUE),
@@ -140,14 +144,16 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   );
 
   // Automatic paging method. Text box to choose orphan size.
+  if (!($paging_automatic_chars_orphan = $config->get($type . '_automatic_chars_orphan'))) {
+    $paging_automatic_chars_orphan = 400;
+  }
   $form['paging']['paging_automatic_chars_orphan'] = array(
     '#type' => 'number',
     '#title' => t('Minumum character length for final page'),
     '#size' => 6,
     '#field_suffix' => t('characters'),
-    '#required' => TRUE,
     '#description' => t('If the final page has fewer characters than this, the last bit of text to the previous page.'),
-    '#default_value' => $config->get($type . '_automatic_chars_orphan'),
+    '#default_value' => $paging_automatic_chars_orphan,
     '#attached' => array('css' => array(backdrop_get_path('module', 'paging') . '/css/paging.admin.css')),
     '#states' => array(
       'visible' => array(// action to take.
@@ -158,12 +164,14 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   );
 
   // Automatic paging method. Select list to choose the number of words per page.
+  if (!($paging_automatic_words = $config->get($type . '_automatic_words'))) {
+    $paging_automatic_words = 1000;
+  }
   $form['paging']['paging_automatic_words'] = array(
     '#type' => 'number',
     '#title' => t('Number of words to display per page'),
     '#field_suffix' => t('words'),
-    '#required' => TRUE,
-    '#default_value' => $config->get($type . '_automatic_words'),
+    '#default_value' => $paging_automatic_words,
     '#states' => array(
       'visible' => array(// action to take.
         ':input[name="paging[paging_enabled]"]' => array('checked' => TRUE),
@@ -173,14 +181,16 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   );
 
   // Automatic paging method. Text box to set orphan page size.
+  if (!($paging_automatic_words_orphan = $config->get($type . '_automatic_words_orphan'))) {
+    $paging_automatic_words_orphan = 100;
+  }
   $form['paging']['paging_automatic_words_orphan'] = array(
     '#type' => 'number',
     '#title' => t('Minumum word length for final page'),
     '#size' => 6,
     '#field_suffix' => t('words'),
-    '#required' => TRUE,
     '#description' => t('If the final page has fewer words than this, the last bit of text to the previous page.'),
-    '#default_value' => $config->get($type . '_automatic_words_orphan'),
+    '#default_value' => $paging_automatic_words_orphan,
     '#attached' => array('css' => array(backdrop_get_path('module', 'paging') . '/css/paging.admin.css')),
     '#states' => array(
       'visible' => array(// action to take.
