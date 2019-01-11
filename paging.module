@@ -83,9 +83,10 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     }
   }
 
-  // @todo - replace this with a field formatter?
-
   $default_field = $config->get($type . '_field');
+  if (empty($default_field) && count($field_options) == 1) {
+    $default_field = reset(array_keys($field_options));
+  }
   if ($default_field == 'body' && !isset($field_options['body'])) {
     $default_field = reset(array_keys($field_options));
   }
