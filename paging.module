@@ -323,7 +323,7 @@ function paging_node_view($node, $view_mode, $langcode) {
     $field = $config->get($node->type . 'field');
 
     // Fall back to default language if translation doesn't exist.
-    if (!property_exists($node, $field) || !isset($node->{$field}[$langcode])) {
+    if (isset($field) && !property_exists($node, $field) || !isset($node->{$field}[$langcode])) {
       $langcode = LANGUAGE_NONE;
     }
 
