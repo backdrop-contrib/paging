@@ -320,7 +320,7 @@ function paging_node_view($node, $view_mode, $langcode) {
   // If paging is enabled for this node type.
   if ($config->get($node->type . '_enabled') == TRUE) {
     // Get the paging field name.
-    $field = $config->get($node->type . 'field');
+    $field = $config->get($node->type . '_field');
 
     // Fall back to default language if translation doesn't exist.
     if (isset($field) && !property_exists($node, $field) || !isset($node->{$field}[$langcode])) {
