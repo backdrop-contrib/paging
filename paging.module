@@ -47,6 +47,9 @@ function paging_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#tree' => TRUE,
+    '#attached' => array(
+      'js' => array(backdrop_get_path('module', 'paging') . '/js/paging.js'),
+    ),
   );
 
   $form['paging']['paging_enabled'] = array(
